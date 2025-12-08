@@ -1,16 +1,24 @@
 import { Icon } from '@rsuite/icons'
 import { useState } from 'react'
-import { IoMdAddCircleOutline } from 'react-icons/io'
-import { Form, Button, Heading, Schema, Divider, DateInput } from 'rsuite'
-
-const { StringType, DateType } = Schema.Types
+import { IoMdAdd } from 'react-icons/io'
+import {
+  Form,
+  Button,
+  Heading,
+  Schema,
+  Divider,
+  DateInput,
+  StringType,
+  DateType,
+  Textarea,
+} from 'rsuite'
 
 // Form model
-const FormModel = Schema.Model({
-  passportName: StringType().isRequired('Passport name is required.'),
-  passportNumber: StringType().isRequired('Passport number is required.'),
+const PassportModel = Schema.Model({
+  name: StringType().isRequired('Passport name is required.'),
+  number: StringType().isRequired('Passport number is required.'),
   dateOfBirth: DateType().isRequired('Date of birth is required.'),
-  passportExpireDate: DateType().isRequired('Passport expire date is required.'),
+  expireDate: DateType().isRequired('Passport expire date is required.'),
   mobile: StringType().isRequired('Mobile is required.'),
   email: StringType()
     .isEmail('Please enter a valid email address.')
@@ -20,10 +28,10 @@ const FormModel = Schema.Model({
 
 // Initial form value
 const initialValue = {
-  passportName: '',
-  passportNumber: '',
+  name: '',
+  number: '',
   dateOfBirth: null as Date | null,
-  passportExpireDate: null as Date | null,
+  expireDate: null as Date | null,
   mobile: '',
   email: '',
   remark: '',
@@ -50,48 +58,57 @@ const Page = () => {
       <Divider />
       <div>
         <Form
-          fluid
-          model={FormModel}
+          model={PassportModel}
           formValue={formValue}
           onChange={(value) => setFormValue(value as FormValue)}
           onSubmit={handleFormSubmit}
         >
-          <div className="grid grid-cols-1 gap-x-3 md:grid-cols-2">
-            <Form.Group controlId="passportName">
-              <Form.ControlLabel>Passport Name</Form.ControlLabel>
-              <Form.Control name="passportName" />
-            </Form.Group>
-            <Form.Group controlId="passportNumber">
-              <Form.ControlLabel>Passport Number</Form.ControlLabel>
-              <Form.Control name="passportNumber" type="tel" />
-            </Form.Group>
-            <Form.Group controlId="dateOfBirth">
-              <Form.ControlLabel>Date of Birth</Form.ControlLabel>
-              <Form.Control name="dateOfBirth" accepter={DateInput} format="dd/MMM/yyyy" />
-            </Form.Group>
-            <Form.Group controlId="passportExpireDate">
-              <Form.ControlLabel>Passport Expire Date</Form.ControlLabel>
-              <Form.Control name="passportExpireDate" accepter={DateInput} format="dd/MMM/yyyy" />
-            </Form.Group>
-            <Form.Group controlId="mobile">
-              <Form.ControlLabel>Mobile</Form.ControlLabel>
-              <Form.Control name="mobile" type="tel" />
-            </Form.Group>
-            <Form.Group controlId="email">
-              <Form.ControlLabel>Email</Form.ControlLabel>
-              <Form.Control name="email" />
-            </Form.Group>
-            <Form.Group controlId="remark" className="col-span-1 md:col-span-2">
-              <Form.ControlLabel>Remark</Form.ControlLabel>
-              <Form.Control name="remark" placeholder="optional" />
-            </Form.Group>
+          <div className="grid grid-cols-1 gap-x-3 gap-y-4 md:grid-cols-2">
+            <Form.Stack fluid>
+              <Form.Group controlId="name">
+                <Form.Label>Passport Name</Form.Label>
+                <Form.Control name="name" />
+              </Form.Group>
+            </Form.Stack>
+            <Form.Stack fluid>
+              <Form.Group controlId="number">
+                <Form.Label>Passport Number</Form.Label>
+                <Form.Control name="number" type="tel" />
+              </Form.Group>
+            </Form.Stack>
+            <Form.Stack fluid>
+              <Form.Group controlId="dateOfBirth">
+                <Form.Label>Date of Birth</Form.Label>
+                <Form.Control name="dateOfBirth" accepter={DateInput} format="dd/MMM/yyyy" />
+              </Form.Group>
+            </Form.Stack>
+            <Form.Stack fluid>
+              <Form.Group controlId="expireDate">
+                <Form.Label>Expire Date</Form.Label>
+                <Form.Control name="expireDate" accepter={DateInput} format="dd/MMM/yyyy" />
+              </Form.Group>
+            </Form.Stack>
+            <Form.Stack fluid>
+              <Form.Group controlId="mobile">
+                <Form.Label>Mobile</Form.Label>
+                <Form.Control name="mobile" type="tel" />
+              </Form.Group>
+            </Form.Stack>
+            <Form.Stack fluid>
+              <Form.Group controlId="email">
+                <Form.Label>Email</Form.Label>
+                <Form.Control name="email" />
+              </Form.Group>
+            </Form.Stack>
+            <Form.Stack fluid className="col-span-1 md:col-span-2">
+              <Form.Group controlId="remark">
+                <Form.Label>Remark</Form.Label>
+                <Form.Control name="remark" placeholder="(optional)" accepter={Textarea} rows={1} />
+              </Form.Group>
+            </Form.Stack>
           </div>
           <Form.Group className="mt-5 flex justify-end">
-            <Button
-              startIcon={<Icon as={IoMdAddCircleOutline} />}
-              appearance="primary"
-              type="submit"
-            >
+            <Button startIcon={<Icon as={IoMdAdd} />} appearance="primary" type="submit">
               Add
             </Button>
           </Form.Group>

@@ -1,5 +1,6 @@
 import { Icon, Trash } from '@rsuite/icons'
 import { CgMore } from 'react-icons/cg'
+import { GrView } from 'react-icons/gr'
 import { TiEdit } from 'react-icons/ti'
 import { Table, Divider, IconButton, Whisper, Popover } from 'rsuite'
 
@@ -9,26 +10,30 @@ const { Column, HeaderCell, Cell } = Table
 const data = [
   {
     id: 1,
-    firstName: 'John',
-    lastName: 'Doe',
-    gender: 'Male',
-    age: 30,
-    postcode: '1234',
+    name: 'SURE FLY LTD SDFLSKDFJOSDIFKJNSODIFKNOSDILFKNOSDLIFKNSDOLIFKNOSDILKFODSLIKFNOSDLKFN<ODLSFK',
+    mobile: '0123456789',
+    contactPersonName: 'Doe',
+    contactPersonMobile: '0123456789',
+    email: 'john@example.com',
+    address: '123 Main St',
+    remarks: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
   },
   {
     id: 2,
-    firstName: 'Jane',
-    lastName: 'Doe',
-    gender: 'Female',
-    age: 25,
-    postcode: '5678',
+    name: 'Jane',
+    mobile: '0123456789',
+    contactPersonName: 'Doe',
+    contactPersonMobile: '0123456789',
+    email: 'jane@example.com',
+    address: '456 Main St',
+    remarks: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
   },
 ]
 
 const Page = () => {
   return (
     <>
-      <Divider>List Agent</Divider>
+      <Divider>List Company</Divider>
       <Table
         autoHeight
         bordered
@@ -43,29 +48,37 @@ const Page = () => {
           <Cell dataKey="id" />
         </Column>
 
-        <Column flexGrow={1} minWidth={150}>
-          <HeaderCell>First Name</HeaderCell>
-          <Cell dataKey="firstName" />
+        <Column flexGrow={1} minWidth={250}>
+          <HeaderCell>Company Name</HeaderCell>
+          <Cell dataKey="name" />
         </Column>
 
-        <Column flexGrow={1} minWidth={150}>
-          <HeaderCell>Last Name</HeaderCell>
-          <Cell dataKey="lastName" />
+        <Column width={180}>
+          <HeaderCell>Company Mobile</HeaderCell>
+          <Cell dataKey="mobile" />
         </Column>
 
-        <Column flexGrow={1} minWidth={100}>
-          <HeaderCell>Gender</HeaderCell>
-          <Cell dataKey="gender" />
+        {/* <Column flexGrow={1} minWidth={200}>
+          <HeaderCell>Contact Person Name</HeaderCell>
+          <Cell dataKey="contactPersonName" />
+        </Column> */}
+
+        <Column width={180}>
+          <HeaderCell>Contact Person Mobile</HeaderCell>
+          <Cell dataKey="contactPersonMobile" />
         </Column>
 
-        <Column flexGrow={1} minWidth={100}>
-          <HeaderCell>Age</HeaderCell>
-          <Cell dataKey="age" />
-        </Column>
-
-        <Column flexGrow={1} minWidth={150}>
-          <HeaderCell>Postcode</HeaderCell>
-          <Cell dataKey="postcode" />
+        {/* <Column flexGrow={2} minWidth={150}>
+          <HeaderCell>Email</HeaderCell>
+          <Cell dataKey="email" />
+        </Column> */}
+        {/* <Column flexGrow={2} minWidth={200}>
+          <HeaderCell>Company Address</HeaderCell>
+          <Cell dataKey="address" />
+        </Column> */}
+        <Column flexGrow={1} minWidth={250}>
+          <HeaderCell>Remarks</HeaderCell>
+          <Cell dataKey="remarks" />
         </Column>
 
         <Column width={80} fixed="right" align="center">
@@ -84,7 +97,19 @@ const Page = () => {
                           <div className="flex flex-col items-start gap-y-2">
                             <IconButton
                               onClick={() => {
-                                onClose()
+                                if (onClose) onClose()
+                              }}
+                              icon={<Icon as={GrView} />}
+                              color="green"
+                              size="sm"
+                              appearance="primary"
+                            >
+                              View
+                            </IconButton>
+
+                            <IconButton
+                              onClick={() => {
+                                if (onClose) onClose()
                               }}
                               icon={<Icon as={TiEdit} />}
                               color="blue"
@@ -96,7 +121,7 @@ const Page = () => {
 
                             <IconButton
                               onClick={() => {
-                                onClose()
+                                if (onClose) onClose()
                               }}
                               icon={<Icon as={Trash} />}
                               color="red"

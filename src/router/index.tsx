@@ -8,6 +8,8 @@ import {
   ListSales,
   AddPassport,
   ListPassport,
+  ReceiveVoucher,
+  CompanyPayment,
 } from '@/pages'
 import { createBrowserRouter } from 'react-router'
 
@@ -46,6 +48,14 @@ const router = createBrowserRouter([
       {
         path: '/listPassport',
         element: <ListPassport />,
+      },
+      {
+        path: '/receiveVoucher',
+        element: <ReceiveVoucher />,
+      },
+      {
+        path: '/companyPayment',
+        element: <CompanyPayment />,
       },
     ],
   },

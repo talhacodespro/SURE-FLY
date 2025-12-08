@@ -1,5 +1,6 @@
 import { Icon, Trash } from '@rsuite/icons'
 import { CgMore } from 'react-icons/cg'
+import { GrView } from 'react-icons/gr'
 import { TiEdit } from 'react-icons/ti'
 import { Table, Divider, IconButton, Whisper, Popover } from 'rsuite'
 
@@ -9,26 +10,26 @@ const { Column, HeaderCell, Cell } = Table
 const data = [
   {
     id: 1,
-    firstName: 'John',
-    lastName: 'Doe',
-    gender: 'Male',
-    age: 30,
-    postcode: '1234',
+    type: 'Ticket',
+    company: 'Company A',
+    amount: '10000000',
+    passport: '1234567890',
+    remarks: 'Remark 1',
   },
   {
     id: 2,
-    firstName: 'Jane',
-    lastName: 'Doe',
-    gender: 'Female',
-    age: 25,
-    postcode: '5678',
+    type: 'Visa',
+    company: 'Company B',
+    amount: '2000',
+    passport: '0987654321',
+    remarks: 'Remark 2',
   },
 ]
 
 const Page = () => {
   return (
     <>
-      <Divider>List Agent</Divider>
+      <Divider>List Sales</Divider>
       <Table
         autoHeight
         bordered
@@ -43,29 +44,29 @@ const Page = () => {
           <Cell dataKey="id" />
         </Column>
 
-        <Column flexGrow={1} minWidth={150}>
-          <HeaderCell>First Name</HeaderCell>
-          <Cell dataKey="firstName" />
+        <Column width={80}>
+          <HeaderCell>Type</HeaderCell>
+          <Cell dataKey="type" />
         </Column>
 
         <Column flexGrow={1} minWidth={150}>
-          <HeaderCell>Last Name</HeaderCell>
-          <Cell dataKey="lastName" />
+          <HeaderCell>Company</HeaderCell>
+          <Cell dataKey="company" />
         </Column>
 
-        <Column flexGrow={1} minWidth={100}>
-          <HeaderCell>Gender</HeaderCell>
-          <Cell dataKey="gender" />
+        <Column width={100}>
+          <HeaderCell>Amount</HeaderCell>
+          <Cell dataKey="amount" />
         </Column>
 
-        <Column flexGrow={1} minWidth={100}>
-          <HeaderCell>Age</HeaderCell>
-          <Cell dataKey="age" />
+        <Column width={150}>
+          <HeaderCell>Passport</HeaderCell>
+          <Cell dataKey="passport" />
         </Column>
 
         <Column flexGrow={1} minWidth={150}>
-          <HeaderCell>Postcode</HeaderCell>
-          <Cell dataKey="postcode" />
+          <HeaderCell>Remarks</HeaderCell>
+          <Cell dataKey="remarks" />
         </Column>
 
         <Column width={80} fixed="right" align="center">
@@ -74,7 +75,7 @@ const Page = () => {
           <Cell verticalAlign="middle">
             {() => (
               <Whisper
-                placement="auto"
+                placement="bottomEnd"
                 trigger="click"
                 speaker={({ className, onClose, ...props }, ref) => {
                   return (
@@ -84,7 +85,19 @@ const Page = () => {
                           <div className="flex flex-col items-start gap-y-2">
                             <IconButton
                               onClick={() => {
-                                onClose()
+                                if (onClose) onClose()
+                              }}
+                              icon={<Icon as={GrView} />}
+                              color="green"
+                              size="sm"
+                              appearance="primary"
+                            >
+                              View
+                            </IconButton>
+
+                            <IconButton
+                              onClick={() => {
+                                if (onClose) onClose()
                               }}
                               icon={<Icon as={TiEdit} />}
                               color="blue"
@@ -96,7 +109,7 @@ const Page = () => {
 
                             <IconButton
                               onClick={() => {
-                                onClose()
+                                if (onClose) onClose()
                               }}
                               icon={<Icon as={Trash} />}
                               color="red"

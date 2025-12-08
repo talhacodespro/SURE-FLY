@@ -66,3 +66,13 @@ textarea:-webkit-autofill:active {
 .rs-picker-none {
   text-align: center;
 }
+
+.rs-btn-icon[data-with-text]:where([data-placement='start'], [data-placement='left']) > .rs-icon {
+  inset-inline-start: 0;
+  border-right-width: 0px;
+}
+
+/* .rs-btn,
+.rs-uploader[data-list-type='picture'] .rs-uploader-trigger-btn {
+  justify-content: start;
+} */

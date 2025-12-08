@@ -1,5 +1,3 @@
-'use client'
-import Textarea from '@/components/Textarea'
 import { useEffect, useMemo, useState } from 'react'
 import {
   Form,
@@ -8,15 +6,18 @@ import {
   Schema,
   Divider,
   SelectPicker,
-  InputNumber,
+  NumberInput,
   DateInput,
   DatePicker,
+  Textarea,
+  StringType,
+  NumberType,
+  DateType,
 } from 'rsuite'
 import { countries } from 'country-data-list'
 import moment from 'moment'
-import { IoMdAddCircleOutline } from 'react-icons/io'
+import { IoMdAdd } from 'react-icons/io'
 import { Icon } from '@rsuite/icons'
-const { StringType, NumberType, DateType } = Schema.Types
 
 // Sales types
 const salesTypes = ['Ticket', 'Visa'] as const
@@ -189,17 +190,21 @@ const Page = () => {
   const salesTypeData = salesTypes.map((item) => ({ label: item, value: item }))
 
   // 🧩 visa type data
-  const visaTypeData = visaTypes
-    .sort((a, b) => a.localeCompare(b))
-    .map((item) => ({ label: item, value: item }))
+  const visaTypeData = useMemo(() => {
+    return visaTypes
+      .sort((a, b) => a.localeCompare(b))
+      .map((item) => ({ label: item, value: item }))
+  }, [])
 
   // 🧩 Country data for visit visa and employment visa
-  const countryData = countries.all
-    .filter((item) => item.emoji && !['Israel', 'India'].includes(item.name))
-    .map((item) => ({
-      label: `${item.emoji} ${item.name}`,
-      value: item.alpha2,
-    }))
+  const countryData = useMemo(() => {
+    return countries.all
+      .filter((item) => item.emoji && !['Israel', 'India'].includes(item.name))
+      .map((item) => ({
+        label: `${item.emoji} ${item.name}`,
+        value: item.alpha2,
+      }))
+  }, [])
 
   return (
     <div className="bg-background container mx-auto max-w-4xl rounded-md p-5">
@@ -208,128 +213,155 @@ const Page = () => {
       </Heading>
       <Divider />
       <Form
-        fluid
         model={schema}
         formValue={formValue}
         onChange={(value) => setFormValue(value as typeof formValue)}
         onSubmit={handleFormSubmit}
       >
-        <div className="grid grid-cols-1 gap-x-3 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-x-3 gap-y-4 md:grid-cols-2">
           {/* Common fields */}
-          <Form.Group controlId="salesType">
-            <Form.ControlLabel>Sales Type</Form.ControlLabel>
-            <Form.Control
-              name="salesType"
-              accepter={SelectPicker}
-              data={salesTypeData}
-              cleanable={false}
-              searchable={false}
-              onChange={(val) => setSelectedType(val)}
-              block
-              className="cursor-pointer"
-            />
-          </Form.Group>
+          <Form.Stack fluid>
+            <Form.Group controlId="salesType">
+              <Form.Label>Sales Type</Form.Label>
+              <Form.Control
+                name="salesType"
+                accepter={SelectPicker}
+                data={salesTypeData}
+                cleanable={false}
+                searchable={false}
+                onChange={(val) => setSelectedType(val)}
+                block
+                className="cursor-pointer"
+              />
+            </Form.Group>
+          </Form.Stack>
 
-          <Form.Group controlId="company">
-            <Form.ControlLabel>Company</Form.ControlLabel>
-            <Form.Control name="company" accepter={SelectPicker} data={salesTypeData} block />
-          </Form.Group>
+          <Form.Stack fluid>
+            <Form.Group controlId="company">
+              <Form.Label>Company</Form.Label>
+              <Form.Control name="company" accepter={SelectPicker} data={salesTypeData} block />
+            </Form.Group>
+          </Form.Stack>
 
-          <Form.Group controlId="amount">
-            <Form.ControlLabel>Amount</Form.ControlLabel>
-            <Form.Control name="amount" accepter={InputNumber} min={0} />
-          </Form.Group>
+          <Form.Stack fluid>
+            <Form.Group controlId="amount">
+              <Form.Label>Amount</Form.Label>
+              <Form.Control name="amount" accepter={NumberInput} min={0} />
+            </Form.Group>
+          </Form.Stack>
 
-          <Form.Group controlId="confirmAmount">
-            <Form.ControlLabel>Confirm Amount</Form.ControlLabel>
-            <Form.Control name="confirmAmount" accepter={InputNumber} min={0} />
-          </Form.Group>
+          <Form.Stack fluid>
+            <Form.Group controlId="confirmAmount">
+              <Form.Label>Confirm Amount</Form.Label>
+              <Form.Control name="confirmAmount" accepter={NumberInput} min={0} />
+            </Form.Group>
+          </Form.Stack>
 
-          <Form.Group controlId="passport">
-            <Form.ControlLabel>Passport</Form.ControlLabel>
-            <Form.Control name="passport" accepter={SelectPicker} data={salesTypeData} block />
-          </Form.Group>
+          <Form.Stack fluid>
+            <Form.Group controlId="passport">
+              <Form.Label>Passport</Form.Label>
+              <Form.Control name="passport" accepter={SelectPicker} data={salesTypeData} block />
+            </Form.Group>
+          </Form.Stack>
 
           {/* 🎯 Ticket fields */}
           {selectedType === 'Ticket' && (
             <>
-              <Form.Group controlId="ticketNumber">
-                <Form.ControlLabel>Ticket Number</Form.ControlLabel>
-                <Form.Control name="ticketNumber" />
-              </Form.Group>
+              <Form.Stack fluid>
+                <Form.Group controlId="ticketNumber">
+                  <Form.Label>Ticket Number</Form.Label>
+                  <Form.Control name="ticketNumber" />
+                </Form.Group>
+              </Form.Stack>
 
-              <Form.Group controlId="ticketIssueDate">
-                <Form.ControlLabel>Ticket Issue Date</Form.ControlLabel>
-                <Form.Control name="ticketIssueDate" accepter={DateInput} format="dd/MMM/yyyy" />
-              </Form.Group>
+              <Form.Stack fluid>
+                <Form.Group controlId="ticketIssueDate">
+                  <Form.Label>Ticket Issue Date</Form.Label>
+                  <Form.Control name="ticketIssueDate" accepter={DateInput} format="dd/MMM/yyyy" />
+                </Form.Group>
+              </Form.Stack>
 
-              <Form.Group controlId="sector">
-                <Form.ControlLabel>Sector</Form.ControlLabel>
-                <Form.Control name="sector" />
-              </Form.Group>
+              <Form.Stack fluid>
+                <Form.Group controlId="sector">
+                  <Form.Label>Sector</Form.Label>
+                  <Form.Control name="sector" />
+                </Form.Group>
+              </Form.Stack>
 
-              <Form.Group controlId="pnr">
-                <Form.ControlLabel>PNR</Form.ControlLabel>
-                <Form.Control name="pnr" />
-              </Form.Group>
+              <Form.Stack fluid>
+                <Form.Group controlId="pnr">
+                  <Form.Label>PNR</Form.Label>
+                  <Form.Control name="pnr" />
+                </Form.Group>
+              </Form.Stack>
 
-              <Form.Group controlId="air">
-                <Form.ControlLabel>Air</Form.ControlLabel>
-                <Form.Control name="air" />
-              </Form.Group>
+              <Form.Stack fluid>
+                <Form.Group controlId="air">
+                  <Form.Label>Air</Form.Label>
+                  <Form.Control name="air" />
+                </Form.Group>
+              </Form.Stack>
 
-              <Form.Group controlId="flightDate">
-                <Form.ControlLabel>Flight Date</Form.ControlLabel>
-                <Form.Control
-                  name="flightDate"
-                  accepter={DatePicker}
-                  editable={false}
-                  format="dd/MMM/yyyy hh:mm"
-                  hideMinutes={(minute) => minute % 5 !== 0}
-                  shouldDisableDate={(date) => moment(date).isBefore(moment().startOf('day'))}
-                  placement="topStart"
-                  block
-                />
-              </Form.Group>
+              <Form.Stack fluid>
+                <Form.Group controlId="flightDate">
+                  <Form.Label>Flight Date</Form.Label>
+                  <Form.Control
+                    name="flightDate"
+                    accepter={DatePicker}
+                    editable={false}
+                    format="dd/MMM/yyyy hh:mm"
+                    hideMinutes={(minute) => minute % 5 !== 0}
+                    shouldDisableDate={(date) => moment(date).isBefore(moment().startOf('day'))}
+                    placement="topStart"
+                    block
+                  />
+                </Form.Group>
+              </Form.Stack>
             </>
           )}
 
           {/* 🎯 Visit Visa fields */}
           {selectedType === 'Visa' && (
             <>
-              <Form.Group controlId="country">
-                <Form.ControlLabel>Country</Form.ControlLabel>
-                <Form.Control
-                  name="country"
-                  accepter={SelectPicker}
-                  data={countryData}
-                  block
-                  placement="bottom"
-                  virtualized
-                />
-              </Form.Group>
-              <Form.Group controlId="visaType">
-                <Form.ControlLabel>Visa Type</Form.ControlLabel>
-                <Form.Control
-                  name="visaType"
-                  accepter={SelectPicker}
-                  data={visaTypeData}
-                  searchable={false}
-                  block
-                  placement="top"
-                />
-              </Form.Group>
+              <Form.Stack fluid>
+                <Form.Group controlId="country">
+                  <Form.Label>Country</Form.Label>
+                  <Form.Control
+                    name="country"
+                    accepter={SelectPicker}
+                    data={countryData}
+                    block
+                    placement="bottom"
+                    virtualized
+                  />
+                </Form.Group>
+              </Form.Stack>
+              <Form.Stack fluid>
+                <Form.Group controlId="visaType">
+                  <Form.Label>Visa Type</Form.Label>
+                  <Form.Control
+                    name="visaType"
+                    accepter={SelectPicker}
+                    data={visaTypeData}
+                    searchable={false}
+                    block
+                    placement="top"
+                  />
+                </Form.Group>
+              </Form.Stack>
             </>
           )}
 
-          <Form.Group controlId="remarks">
-            <Form.ControlLabel>Remarks</Form.ControlLabel>
-            <Form.Control name="remarks" accepter={Textarea} rows={1} />
-          </Form.Group>
+          <Form.Stack fluid>
+            <Form.Group controlId="remarks">
+              <Form.Label>Remarks</Form.Label>
+              <Form.Control name="remarks" accepter={Textarea} rows={1} />
+            </Form.Group>
+          </Form.Stack>
         </div>
 
         <Form.Group className="mt-5 flex justify-end">
-          <Button startIcon={<Icon as={IoMdAddCircleOutline} />} appearance="primary" type="submit">
+          <Button startIcon={<Icon as={IoMdAdd} />} appearance="primary" type="submit">
             Add
           </Button>
         </Form.Group>

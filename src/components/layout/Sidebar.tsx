@@ -6,6 +6,7 @@ import { useSidebar } from '@/store/useSidebar'
 import { BiSolidDashboard } from 'react-icons/bi'
 import { FaBuildingColumns, FaPassport } from 'react-icons/fa6'
 import { IoPricetagsSharp } from 'react-icons/io5'
+import { MdAccountBalanceWallet } from 'react-icons/md'
 
 // Sidebar items
 const sidebarItems = [
@@ -60,6 +61,25 @@ const sidebarItems = [
       },
     ],
   },
+  {
+    type: 'menu',
+    label: 'Account',
+    icon: MdAccountBalanceWallet,
+    children: [
+      {
+        label: 'Receive Voucher',
+        path: '/receiveVoucher',
+      },
+      {
+        label: 'Company Payment',
+        path: '/companyPayment',
+      },
+      {
+        label: 'Payment Method',
+        path: '/paymentMethod',
+      },
+    ],
+  },
 ]
 
 const Sidebar = () => {
@@ -76,7 +96,11 @@ const Sidebar = () => {
           'transition-transform duration-300 ease-in-out md:translate-x-0',
         )}
       >
-        <Sidenav defaultOpenKeys={['2']} className="h-screen overflow-auto" appearance="default">
+        <Sidenav
+          defaultOpenKeys={['Company', 'Sales', 'Account', 'Passport']}
+          className="h-screen overflow-auto"
+          appearance="default"
+        >
           <Sidenav.Body>
             <Nav activeKey={pathname}>
               {sidebarItems.map((item, index) => {
@@ -97,7 +121,12 @@ const Sidebar = () => {
 
                 if (item.type === 'menu') {
                   return (
-                    <Nav.Menu key={index} title={item.label} icon={<Icon as={item.icon} />}>
+                    <Nav.Menu
+                      key={index}
+                      title={item.label}
+                      eventKey={item.label}
+                      icon={<Icon as={item.icon} />}
+                    >
                       {item.children?.map((child, childIndex) => (
                         <Nav.Item
                           key={childIndex}

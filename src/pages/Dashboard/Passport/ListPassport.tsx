@@ -1,5 +1,6 @@
 import { Icon, Trash } from '@rsuite/icons'
 import { CgMore } from 'react-icons/cg'
+import { GrView } from 'react-icons/gr'
 import { TiEdit } from 'react-icons/ti'
 import { Table, Divider, IconButton, Whisper, Popover } from 'rsuite'
 
@@ -9,26 +10,30 @@ const { Column, HeaderCell, Cell } = Table
 const data = [
   {
     id: 1,
-    firstName: 'John',
-    lastName: 'Doe',
-    gender: 'Male',
-    age: 30,
-    postcode: '1234',
+    name: 'John',
+    number: 'A15858199',
+    dateOfBirth: '2-2-2000',
+    expireDate: '2-2-2025',
+    mobile: '0123456789',
+    email: 'john@example.com',
+    remark: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
   },
   {
     id: 2,
-    firstName: 'Jane',
-    lastName: 'Doe',
-    gender: 'Female',
-    age: 25,
-    postcode: '5678',
+    name: 'Jane',
+    number: 'Doe',
+    dateOfBirth: '2-2-2000',
+    expireDate: '2-2-2025',
+    mobile: '0123456789',
+    email: 'jane@example.com',
+    remark: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
   },
 ]
 
 const Page = () => {
   return (
     <>
-      <Divider>List Agent</Divider>
+      <Divider>List Passport</Divider>
       <Table
         autoHeight
         bordered
@@ -44,28 +49,38 @@ const Page = () => {
         </Column>
 
         <Column flexGrow={1} minWidth={150}>
-          <HeaderCell>First Name</HeaderCell>
-          <Cell dataKey="firstName" />
+          <HeaderCell>Passport Name</HeaderCell>
+          <Cell dataKey="name" />
+        </Column>
+
+        <Column width={150}>
+          <HeaderCell>Passport Number</HeaderCell>
+          <Cell dataKey="number" />
+        </Column>
+
+        <Column width={120}>
+          <HeaderCell>Date of Birth</HeaderCell>
+          <Cell dataKey="dateOfBirth" />
+        </Column>
+
+        <Column width={120}>
+          <HeaderCell>Expire Date</HeaderCell>
+          <Cell dataKey="expireDate" />
+        </Column>
+
+        {/* <Column flexGrow={1} minWidth={150}>
+          <HeaderCell>Mobile</HeaderCell>
+          <Cell dataKey="mobile" />
         </Column>
 
         <Column flexGrow={1} minWidth={150}>
-          <HeaderCell>Last Name</HeaderCell>
-          <Cell dataKey="lastName" />
-        </Column>
+          <HeaderCell>Email</HeaderCell>
+          <Cell dataKey="email" />
+        </Column> */}
 
-        <Column flexGrow={1} minWidth={100}>
-          <HeaderCell>Gender</HeaderCell>
-          <Cell dataKey="gender" />
-        </Column>
-
-        <Column flexGrow={1} minWidth={100}>
-          <HeaderCell>Age</HeaderCell>
-          <Cell dataKey="age" />
-        </Column>
-
-        <Column flexGrow={1} minWidth={150}>
-          <HeaderCell>Postcode</HeaderCell>
-          <Cell dataKey="postcode" />
+        <Column flexGrow={1} minWidth={250}>
+          <HeaderCell>Remark</HeaderCell>
+          <Cell dataKey="remark" />
         </Column>
 
         <Column width={80} fixed="right" align="center">
@@ -84,7 +99,19 @@ const Page = () => {
                           <div className="flex flex-col items-start gap-y-2">
                             <IconButton
                               onClick={() => {
-                                onClose()
+                                if (onClose) onClose()
+                              }}
+                              icon={<Icon as={GrView} />}
+                              color="green"
+                              size="sm"
+                              appearance="primary"
+                            >
+                              View
+                            </IconButton>
+
+                            <IconButton
+                              onClick={() => {
+                                if (onClose) onClose()
                               }}
                               icon={<Icon as={TiEdit} />}
                               color="blue"
@@ -96,7 +123,7 @@ const Page = () => {
 
                             <IconButton
                               onClick={() => {
-                                onClose()
+                                if (onClose) onClose()
                               }}
                               icon={<Icon as={Trash} />}
                               color="red"

@@ -1,30 +1,100 @@
 import { useSidebar } from '@/store/useSidebar'
-import { Menu } from '@rsuite/icons'
-import { IconButton } from 'rsuite'
+import { Icon, Menu as RSuiteMenu } from '@rsuite/icons'
+import { forwardRef, useRef, type Ref } from 'react'
+import type { WhisperInstance } from 'rsuite'
+import { CgDarkMode, CgProfile } from 'react-icons/cg'
+import { LuLogOut } from 'react-icons/lu'
+import { Avatar, Center, IconButton, Menu, Popover, Whisper } from 'rsuite'
+import { useTheme } from '@/store/useTheme'
+
+// ---------------
+// TYPES
+// ---------------
+interface MenuPopoverProps {
+  onProfile: () => void
+  onLogout: () => void
+  onTheme: () => void
+  isDark: boolean
+}
+
+const MenuPopover = forwardRef(
+  (
+    { onProfile, onLogout, onTheme, isDark, ...rest }: MenuPopoverProps,
+    ref: Ref<HTMLDivElement>,
+  ) => (
+    <Popover ref={ref} {...rest} full>
+      <Menu>
+        <Menu.Item onClick={onProfile} icon={<Icon as={CgProfile} />}>
+          Profile
+        </Menu.Item>
+
+        <Menu.Item onClick={onTheme} icon={<Icon as={CgDarkMode} />}>
+          {isDark ? 'Light' : 'Dark'}
+        </Menu.Item>
+
+        <Menu.Item onClick={onLogout} icon={<Icon as={LuLogOut} />}>
+          Logout
+        </Menu.Item>
+      </Menu>
+    </Popover>
+  ),
+)
+
+MenuPopover.displayName = 'MenuPopover'
 
 const Navbar = () => {
-  // const { theme, setTheme } = useTheme() // Theme state
+  const { theme, setTheme } = useTheme() // Theme state
   const { sidebar, setSidebar } = useSidebar() // Sidebar toggle state
+
+  const whisperRef = useRef<WhisperInstance | null>(null)
+
+  const closeMenu = () => whisperRef.current?.close()
+
+  const handleProfileClick = () => {
+    closeMenu()
+  }
+
+  const handleLogoutClick = () => {
+    closeMenu()
+  }
+
+  const handleThemeClick = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark')
+  }
+
   return (
     <div className="flex h-[50px] items-center justify-between bg-[#F7F7FA] px-1.5 shadow-xs dark:bg-[#1B1D24]">
-      {/* Mobile Menu Button */}
-      <div className="hidden md:block"></div>
+      <div className="hidden md:block" />
+
       <div className="block md:hidden">
         <IconButton
-          icon={<Menu />}
+          icon={<RSuiteMenu />}
           appearance="subtle"
           size="lg"
           onClick={() => setSidebar(!sidebar)}
         />
       </div>
-      {/* <div>
-        <IconButton
-          icon={<Icon as={CgDarkMode} />}
-          appearance="subtle"
-          size="md"
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-        />
-      </div> */}
+
+      <div>
+        <Whisper
+          placement="bottomEnd"
+          trigger="click"
+          controlId="profile-menu"
+          ref={whisperRef}
+          speaker={
+            <MenuPopover
+              onProfile={handleProfileClick}
+              onLogout={handleLogoutClick}
+              onTheme={handleThemeClick}
+              isDark={theme === 'dark'}
+            />
+          }
+        >
+          <Center>
+            <Avatar src="https://picsum.photos/200" size="sm" />
+          </Center>
+        </Whisper>
+      </div>
     </div>
   )
 }

@@ -8,6 +8,11 @@ type ThemeState = {
 }
 
 export const useTheme = create<ThemeState>()((set) => ({
-  theme: 'dark',
+  theme: (localStorage.getItem('theme') as Theme) || 'light',
   setTheme: (theme: Theme) => set({ theme }),
 }))
+
+// Add theme to local storage
+useTheme.subscribe(({ theme }) => {
+  localStorage.setItem('theme', theme)
+})

@@ -1,13 +1,11 @@
-import Textarea from '@/components/Textarea'
 import { Icon } from '@rsuite/icons'
 import { useState } from 'react'
-import { IoMdAddCircleOutline } from 'react-icons/io'
-import { Form, Button, Heading, Schema, Divider } from 'rsuite'
-
-const { StringType } = Schema.Types
+import { IoMdAdd } from 'react-icons/io'
+import { Form, Button, Heading, Divider, Textarea } from 'rsuite'
+import { SchemaModel, StringType } from 'rsuite/Schema'
 
 // Form model
-const FormModel = Schema.Model({
+const FormModel = SchemaModel({
   name: StringType().isRequired('Name is required.'),
   mobile: StringType().isRequired('Mobile is required.'),
   contactPersonName: StringType().isRequired('Contact person name is required.'),
@@ -49,48 +47,57 @@ const Page = () => {
       <Divider />
       <div>
         <Form
-          fluid
           model={FormModel}
           formValue={formValue}
           onChange={(value) => setFormValue(value as FormValue)}
           onSubmit={handleFormSubmit}
         >
-          <div className="grid grid-cols-1 gap-x-3 md:grid-cols-2">
-            <Form.Group controlId="name">
-              <Form.ControlLabel>Company Name</Form.ControlLabel>
-              <Form.Control name="name" />
-            </Form.Group>
-            <Form.Group controlId="mobile">
-              <Form.ControlLabel>Company Mobile</Form.ControlLabel>
-              <Form.Control name="mobile" type="tel" />
-            </Form.Group>
-            <Form.Group controlId="contactPersonName">
-              <Form.ControlLabel>Contact Person Name</Form.ControlLabel>
-              <Form.Control name="contactPersonName" type="text" />
-            </Form.Group>
-            <Form.Group controlId="contactPersonMobile">
-              <Form.ControlLabel>Contact Person Mobile</Form.ControlLabel>
-              <Form.Control name="contactPersonMobile" type="tel" />
-            </Form.Group>
-            <Form.Group controlId="email">
-              <Form.ControlLabel>Company Email</Form.ControlLabel>
-              <Form.Control name="email" type="email" />
-            </Form.Group>
-            <Form.Group controlId="address" className="">
-              <Form.ControlLabel>Company Address</Form.ControlLabel>
-              <Form.Control name="address" accepter={Textarea} rows={1} />
-            </Form.Group>
-            <Form.Group controlId="remarks" className="md:col-span-2">
-              <Form.ControlLabel>Remarks</Form.ControlLabel>
-              <Form.Control name="remarks" accepter={Textarea} rows={1} />
-            </Form.Group>
+          <div className="grid grid-cols-1 gap-x-3 gap-y-4 md:grid-cols-2">
+            <Form.Stack fluid>
+              <Form.Group controlId="name">
+                <Form.Label>Company Name</Form.Label>
+                <Form.Control name="name" />
+              </Form.Group>
+            </Form.Stack>
+            <Form.Stack fluid>
+              <Form.Group controlId="mobile">
+                <Form.Label>Company Mobile</Form.Label>
+                <Form.Control name="mobile" type="tel" />
+              </Form.Group>
+            </Form.Stack>
+            <Form.Stack fluid>
+              <Form.Group controlId="contactPersonName">
+                <Form.Label>Contact Person Name</Form.Label>
+                <Form.Control name="contactPersonName" type="text" />
+              </Form.Group>
+            </Form.Stack>
+            <Form.Stack fluid>
+              <Form.Group controlId="contactPersonMobile">
+                <Form.Label>Contact Person Mobile</Form.Label>
+                <Form.Control name="contactPersonMobile" type="tel" />
+              </Form.Group>
+            </Form.Stack>
+            <Form.Stack fluid>
+              <Form.Group controlId="email">
+                <Form.Label>Company Email</Form.Label>
+                <Form.Control name="email" type="email" />
+              </Form.Group>
+            </Form.Stack>
+            <Form.Stack fluid>
+              <Form.Group controlId="address" className="">
+                <Form.Label>Company Address</Form.Label>
+                <Form.Control name="address" accepter={Textarea} rows={1} />
+              </Form.Group>
+            </Form.Stack>
+            <Form.Stack fluid className="col-span-1 md:col-span-2">
+              <Form.Group controlId="remarks" className="md:col-span-2">
+                <Form.Label>Remarks</Form.Label>
+                <Form.Control name="remarks" accepter={Textarea} rows={1} />
+              </Form.Group>
+            </Form.Stack>
           </div>
           <Form.Group className="mt-5 flex justify-end">
-            <Button
-              startIcon={<Icon as={IoMdAddCircleOutline} />}
-              appearance="primary"
-              type="submit"
-            >
+            <Button startIcon={<Icon as={IoMdAdd} />} appearance="primary" type="submit">
               Add
             </Button>
           </Form.Group>
