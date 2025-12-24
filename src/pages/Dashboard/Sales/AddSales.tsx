@@ -154,8 +154,7 @@ const Page = () => {
   }, [selectedType])
 
   const handleFormSubmit = () => {
-    // 🧩 Destructure common fields
-    const { salesType, company, amount, passport, remarks, ...rest } = formValue
+    const { salesType, ...rest } = formValue
 
     //  🧩 Extra details structure based on selectedType
     const details = getExtraValue(selectedType)
@@ -172,17 +171,6 @@ const Page = () => {
     }
 
     // final formatted data
-    const formattedData = {
-      type: salesType,
-      company,
-      remarks,
-      passport,
-      amount,
-      details: filledDetails,
-    }
-
-    console.log('✅ Final Submit Data:', formattedData)
-
     setFormValue({ ...initialValue, salesType, ...getExtraValue(selectedType) })
   }
 

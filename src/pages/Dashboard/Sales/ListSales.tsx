@@ -30,15 +30,7 @@ const Page = () => {
   return (
     <>
       <Divider>List Sales</Divider>
-      <Table
-        autoHeight
-        bordered
-        cellBordered
-        data={data}
-        onRowClick={(rowData) => {
-          console.log(rowData)
-        }}
-      >
+      <Table autoHeight bordered cellBordered data={data} onRowClick={() => {}}>
         <Column width={60} align="center" fixed>
           <HeaderCell>Id</HeaderCell>
           <Cell dataKey="id" />

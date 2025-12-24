@@ -10,6 +10,7 @@ import {
   ListPassport,
   ReceiveVoucher,
   CompanyPayment,
+  PaymentMethod,
 } from '@/pages'
 import { createBrowserRouter } from 'react-router'
 
@@ -56,6 +57,10 @@ const router = createBrowserRouter([
       {
         path: '/companyPayment',
         element: <CompanyPayment />,
+      },
+      {
+        path: '/paymentMethod',
+        element: <PaymentMethod />,
       },
     ],
   },

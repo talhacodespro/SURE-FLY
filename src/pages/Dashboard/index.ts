@@ -15,3 +15,4 @@ export { default as ListPassport } from './Passport/ListPassport'
 // Account
 export { default as ReceiveVoucher } from './Account/ReceiveVoucher'
 export { default as CompanyPayment } from './Account/CompanyPayment'
+export { default as PaymentMethod } from './Account/PaymentMethod'

@@ -35,7 +35,6 @@ const Page = () => {
 
   // Handle form submit
   const handleFormSubmit = () => {
-    console.log('Form submitted', formValue)
     setFormValue(initialValue)
   }
 
