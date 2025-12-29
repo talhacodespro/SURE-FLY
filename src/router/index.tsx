@@ -11,6 +11,9 @@ import {
   ReceiveVoucher,
   CompanyPayment,
   PaymentMethod,
+  Profile,
+  FundTransfer,
+  AddExpense,
 } from '@/pages'
 import { createBrowserRouter } from 'react-router'
 
@@ -62,7 +65,19 @@ const router = createBrowserRouter([
         path: '/paymentMethod',
         element: <PaymentMethod />,
       },
+      {
+        path: '/fundTransfer',
+        element: <FundTransfer />,
+      },
+      {
+        path: '/addExpense',
+        element: <AddExpense />,
+      },
     ],
+  },
+  {
+    path: '/profile',
+    element: <Profile />,
   },
 ])
 

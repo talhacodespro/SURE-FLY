@@ -1,7 +1,6 @@
 import { Icon, Trash } from '@rsuite/icons'
 import { useState } from 'react'
 import { CgMore } from 'react-icons/cg'
-import { GrView } from 'react-icons/gr'
 import { IoMdAdd, IoMdClose } from 'react-icons/io'
 import { TiEdit } from 'react-icons/ti'
 import {
@@ -88,13 +87,8 @@ const Page = () => {
           onChange={(value) => setFormValue(value as FormValue)}
           onSubmit={handleFormSubmit}
         >
-          <Modal.Header closeButton={false} className="px-2">
-            <Modal.Title>
-              <Heading level={4} className="text-center">
-                Info
-              </Heading>
-              <Divider />
-            </Modal.Title>
+          <Modal.Header closeButton={false} className="pl-2">
+            <Modal.Title>Info</Modal.Title>
           </Modal.Header>
           <Modal.Body className="px-2">
             <div className="flex flex-col gap-y-4">
@@ -116,7 +110,7 @@ const Page = () => {
                   <Form.Control block name="bankName" />
                 </Form.Group>
               </Form.Stack>
-              <Form.Stack fluid>
+              <Form.Stack fluid className="mb-2">
                 <Form.Group controlId="openingBalance">
                   <Form.Label>Opening Balance</Form.Label>
                   <Form.Control block name="openingBalance" accepter={NumberInput} />
@@ -189,18 +183,6 @@ const Page = () => {
                       <>
                         <div className="px-2 pt-2 pb-2">
                           <div className="flex flex-col items-start gap-y-2">
-                            <IconButton
-                              onClick={() => {
-                                if (onClose) onClose()
-                              }}
-                              icon={<Icon as={GrView} />}
-                              color="green"
-                              size="sm"
-                              appearance="primary"
-                            >
-                              View
-                            </IconButton>
-
                             <IconButton
                               onClick={() => {
                                 if (onClose) onClose()

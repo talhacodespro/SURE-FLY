@@ -7,6 +7,7 @@ import { BiSolidDashboard } from 'react-icons/bi'
 import { FaBuildingColumns, FaPassport } from 'react-icons/fa6'
 import { IoPricetagsSharp } from 'react-icons/io5'
 import { MdAccountBalanceWallet } from 'react-icons/md'
+import { TbCashBanknoteFilled } from 'react-icons/tb'
 
 // Sidebar items
 const sidebarItems = [
@@ -77,6 +78,44 @@ const sidebarItems = [
       {
         label: 'Payment Method',
         path: '/paymentMethod',
+      },
+    ],
+  },
+  {
+    type: 'menu',
+    label: 'Cash Manager',
+    icon: TbCashBanknoteFilled,
+    children: [
+      {
+        label: 'Fund Transfer',
+        path: '/fundTransfer',
+      },
+      {
+        label: 'All Transaction',
+        path: '/allTransaction',
+      },
+      {
+        label: 'NonBank Transaction',
+        path: '/nonBankTransaction',
+      },
+    ],
+  },
+  {
+    type: 'menu',
+    label: 'Expense',
+    icon: TbCashBanknoteFilled,
+    children: [
+      {
+        label: 'Add Expense',
+        path: '/addExpense',
+      },
+      {
+        label: 'All Expense',
+        path: '/allExpense',
+      },
+      {
+        label: 'Expense Category',
+        path: '/expenseCategory',
       },
     ],
   },

@@ -54,11 +54,16 @@ const visaTypes = [
 // 🧩 Base validation model
 const baseModel = {
   salesType: StringType().isRequired('Sales type is required.'),
+  purchaseFrom: StringType().isRequired('Purchase from is required.'),
+  purchaseAmount: NumberType().isRequired('Purchase amount is required.'),
   company: StringType().isRequired('Company name is required.'),
   amount: NumberType().isRequired('Amount is required.'),
   confirmAmount: NumberType()
     .isRequired('Confirm amount is required.')
     .equalTo('amount', 'Amounts do not match.'),
+  confirmPurchaseAmount: NumberType()
+    .equalTo('purchaseAmount', 'Purchase amounts do not match.')
+    .isRequired('Confirm amount is required.'),
   passport: StringType().isRequired('Passport name is required.'),
   remarks: StringType().isRequired('Remarks is required.'),
 }
@@ -88,9 +93,12 @@ const getExtraModel = (type: SalesType) => {
 // 🧩 Initial values
 const initialValue = {
   salesType: 'Ticket',
+  purchaseFrom: '',
+  purchaseAmount: null,
   company: '',
   amount: null,
   confirmAmount: null,
+  confirmPurchaseAmount: null,
   passport: '',
   remarks: '',
 
@@ -194,6 +202,30 @@ const Page = () => {
       }))
   }, [])
 
+  const purchaseFromData = useMemo(
+    () => [
+      { label: 'SURE FLY LTD', value: 'SURE FLY LTD' },
+      { label: 'Jane', value: 'Jane' },
+    ],
+    [],
+  )
+
+  const companyData = useMemo(
+    () => [
+      { label: 'SURE FLY LTD', value: 'SURE FLY LTD' },
+      { label: 'Jane', value: 'Jane' },
+    ],
+    [],
+  )
+
+  const passportData = useMemo(
+    () => [
+      { label: 'John (A15858199)', value: 'A15858199' },
+      { label: 'Jane (Doe)', value: 'Doe' },
+    ],
+    [],
+  )
+
   return (
     <div className="bg-background container mx-auto max-w-4xl rounded-md p-5">
       <Heading level={4} className="text-center">
@@ -225,30 +257,89 @@ const Page = () => {
           </Form.Stack>
 
           <Form.Stack fluid>
-            <Form.Group controlId="company">
-              <Form.Label>Company</Form.Label>
-              <Form.Control name="company" accepter={SelectPicker} data={salesTypeData} block />
+            <Form.Group controlId="purchaseFrom">
+              <Form.Label>Purchase From</Form.Label>
+              <Form.Control
+                name="purchaseFrom"
+                accepter={SelectPicker}
+                data={purchaseFromData}
+                block
+                errorPlacement="bottomEnd"
+              />
             </Form.Group>
           </Form.Stack>
 
           <Form.Stack fluid>
-            <Form.Group controlId="amount">
-              <Form.Label>Amount</Form.Label>
-              <Form.Control name="amount" accepter={NumberInput} min={0} />
+            <Form.Group controlId="purchaseAmount">
+              <Form.Label>Purchase Amount</Form.Label>
+              <Form.Control
+                name="purchaseAmount"
+                accepter={NumberInput}
+                min={0}
+                errorPlacement="bottomEnd"
+              />
             </Form.Group>
           </Form.Stack>
 
           <Form.Stack fluid>
-            <Form.Group controlId="confirmAmount">
+            <Form.Group controlId="confirmPurchaseAmount">
               <Form.Label>Confirm Amount</Form.Label>
-              <Form.Control name="confirmAmount" accepter={NumberInput} min={0} />
+              <Form.Control
+                name="confirmPurchaseAmount"
+                accepter={NumberInput}
+                min={0}
+                errorPlacement="bottomEnd"
+              />
             </Form.Group>
           </Form.Stack>
 
           <Form.Stack fluid>
             <Form.Group controlId="passport">
               <Form.Label>Passport</Form.Label>
-              <Form.Control name="passport" accepter={SelectPicker} data={salesTypeData} block />
+              <Form.Control
+                name="passport"
+                accepter={SelectPicker}
+                data={passportData}
+                block
+                errorPlacement="bottomEnd"
+              />
+            </Form.Group>
+          </Form.Stack>
+
+          <Form.Stack fluid>
+            <Form.Group controlId="company">
+              <Form.Label>Company</Form.Label>
+              <Form.Control
+                name="company"
+                accepter={SelectPicker}
+                data={companyData}
+                block
+                errorPlacement="bottomEnd"
+              />
+            </Form.Group>
+          </Form.Stack>
+
+          <Form.Stack fluid>
+            <Form.Group controlId="amount">
+              <Form.Label>Company Amount</Form.Label>
+              <Form.Control
+                name="amount"
+                accepter={NumberInput}
+                min={0}
+                errorPlacement="bottomEnd"
+              />
+            </Form.Group>
+          </Form.Stack>
+
+          <Form.Stack fluid>
+            <Form.Group controlId="confirmAmount">
+              <Form.Label>Confirm Amount</Form.Label>
+              <Form.Control
+                name="confirmAmount"
+                accepter={NumberInput}
+                min={0}
+                errorPlacement="bottomEnd"
+              />
             </Form.Group>
           </Form.Stack>
 
@@ -258,35 +349,40 @@ const Page = () => {
               <Form.Stack fluid>
                 <Form.Group controlId="ticketNumber">
                   <Form.Label>Ticket Number</Form.Label>
-                  <Form.Control name="ticketNumber" />
+                  <Form.Control name="ticketNumber" errorPlacement="bottomEnd" />
                 </Form.Group>
               </Form.Stack>
 
               <Form.Stack fluid>
                 <Form.Group controlId="ticketIssueDate">
                   <Form.Label>Ticket Issue Date</Form.Label>
-                  <Form.Control name="ticketIssueDate" accepter={DateInput} format="dd/MMM/yyyy" />
+                  <Form.Control
+                    name="ticketIssueDate"
+                    accepter={DateInput}
+                    format="dd/MMM/yyyy"
+                    errorPlacement="bottomEnd"
+                  />
                 </Form.Group>
               </Form.Stack>
 
               <Form.Stack fluid>
                 <Form.Group controlId="sector">
                   <Form.Label>Sector</Form.Label>
-                  <Form.Control name="sector" />
+                  <Form.Control name="sector" errorPlacement="bottomEnd" />
                 </Form.Group>
               </Form.Stack>
 
               <Form.Stack fluid>
                 <Form.Group controlId="pnr">
                   <Form.Label>PNR</Form.Label>
-                  <Form.Control name="pnr" />
+                  <Form.Control name="pnr" errorPlacement="bottomEnd" />
                 </Form.Group>
               </Form.Stack>
 
               <Form.Stack fluid>
                 <Form.Group controlId="air">
                   <Form.Label>Air</Form.Label>
-                  <Form.Control name="air" />
+                  <Form.Control name="air" errorPlacement="bottomEnd" />
                 </Form.Group>
               </Form.Stack>
 
@@ -298,7 +394,6 @@ const Page = () => {
                     accepter={DatePicker}
                     editable={false}
                     format="dd/MMM/yyyy hh:mm"
-                    hideMinutes={(minute) => minute % 5 !== 0}
                     shouldDisableDate={(date) => moment(date).isBefore(moment().startOf('day'))}
                     placement="topStart"
                     block
@@ -340,7 +435,7 @@ const Page = () => {
             </>
           )}
 
-          <Form.Stack fluid>
+          <Form.Stack fluid className="col-span-1 md:col-span-2">
             <Form.Group controlId="remarks">
               <Form.Label>Remarks</Form.Label>
               <Form.Control name="remarks" accepter={Textarea} rows={1} />

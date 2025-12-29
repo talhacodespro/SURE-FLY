@@ -55,31 +55,31 @@ const Page = () => {
             <Form.Stack fluid>
               <Form.Group controlId="name">
                 <Form.Label>Company Name</Form.Label>
-                <Form.Control name="name" />
+                <Form.Control name="name" errorPlacement="bottomEnd" />
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>
               <Form.Group controlId="mobile">
                 <Form.Label>Company Mobile</Form.Label>
-                <Form.Control name="mobile" type="tel" />
+                <Form.Control name="mobile" type="tel" errorPlacement="bottomEnd" />
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>
               <Form.Group controlId="contactPersonName">
                 <Form.Label>Contact Person Name</Form.Label>
-                <Form.Control name="contactPersonName" type="text" />
+                <Form.Control name="contactPersonName" type="text" errorPlacement="bottomEnd" />
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>
               <Form.Group controlId="contactPersonMobile">
                 <Form.Label>Contact Person Mobile</Form.Label>
-                <Form.Control name="contactPersonMobile" type="tel" />
+                <Form.Control name="contactPersonMobile" type="tel" errorPlacement="bottomEnd" />
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>
               <Form.Group controlId="email">
                 <Form.Label>Company Email</Form.Label>
-                <Form.Control name="email" type="email" />
+                <Form.Control name="email" type="email" errorPlacement="bottomEnd" />
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>

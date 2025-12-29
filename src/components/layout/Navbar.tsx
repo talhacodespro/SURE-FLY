@@ -6,6 +6,7 @@ import { CgDarkMode, CgProfile } from 'react-icons/cg'
 import { LuLogOut } from 'react-icons/lu'
 import { Avatar, Center, IconButton, Menu, Popover, Whisper } from 'rsuite'
 import { useTheme } from '@/store/useTheme'
+import { useNavigate } from 'react-router'
 
 // ---------------
 // TYPES
@@ -45,12 +46,14 @@ MenuPopover.displayName = 'MenuPopover'
 const Navbar = () => {
   const { theme, setTheme } = useTheme() // Theme state
   const { sidebar, setSidebar } = useSidebar() // Sidebar toggle state
+  const navigate = useNavigate()
 
   const whisperRef = useRef<WhisperInstance | null>(null)
 
   const closeMenu = () => whisperRef.current?.close()
 
   const handleProfileClick = () => {
+    navigate('/profile')
     closeMenu()
   }
 
