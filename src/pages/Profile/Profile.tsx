@@ -20,6 +20,8 @@ import {
   SelectPicker,
   IconButton,
   Tag,
+  Whisper,
+  Popover,
 } from 'rsuite'
 import { Link } from 'react-router'
 import { Icon } from '@rsuite/icons'
@@ -37,6 +39,7 @@ import {
 import { RxAvatar } from 'react-icons/rx'
 import type { FormInstance } from 'rsuite'
 import { FaUserEdit } from 'react-icons/fa'
+import { CgMore } from 'react-icons/cg'
 import { IoKeySharp } from 'react-icons/io5'
 
 const Page = () => {
@@ -157,6 +160,14 @@ const Page = () => {
     pin: '',
   })
   const createUserFormRef = useRef<FormInstance>(null)
+  const [editUserOpen, setEditUserOpen] = useState(false)
+  const [editingUser, setEditingUser] = useState<{
+    id: number
+    name: string
+    email: string
+    role: string
+  } | null>(null)
+  const editUserFormRef = useRef<FormInstance>(null)
 
   // --- Create User Validation Schema ---
   const userModel = useMemo(() => {
@@ -170,6 +181,11 @@ const Page = () => {
       pin: StringType()
         .isRequired('PIN is required.')
         .addRule((value) => /^\d{6}$/.test(value), 'PIN must be 6 digits.'),
+    })
+  }, [])
+  const editUserModel = useMemo(() => {
+    return Schema.Model({
+      role: StringType().isRequired('Role is required.'),
     })
   }, [])
 
@@ -198,6 +214,20 @@ const Page = () => {
       pin: '',
     })
     toaster.push(<Message type="success">User created successfully</Message>, {
+      placement: 'bottomEnd',
+    })
+  }
+  const handleEditUserClick = (user: { id: number; name: string; email: string; role: string }) => {
+    setEditingUser({ id: user.id, name: user.name, email: user.email, role: user.role })
+    setEditUserOpen(true)
+  }
+  const handleUpdateUser = () => {
+    if (!editUserFormRef.current?.check() || !editingUser) return
+    setUserList((prev) =>
+      prev.map((u) => (u.id === editingUser.id ? { ...u, role: editingUser.role } : u)),
+    )
+    setEditUserOpen(false)
+    toaster.push(<Message type="success">User updated successfully</Message>, {
       placement: 'bottomEnd',
     })
   }
@@ -488,7 +518,7 @@ const Page = () => {
       <Panel
         header={
           <div className="flex items-center justify-between">
-            <Heading level={4}>User Management</Heading>
+            <Heading level={4}>User Role</Heading>
             <Button
               startIcon={<Icon as={IoMdAdd} />}
               appearance="primary"
@@ -555,33 +585,85 @@ const Page = () => {
             <HeaderCell>Action</HeaderCell>
             <Cell>
               {(rowData) => (
-                <div className="flex gap-2">
-                  <IconButton
-                    icon={
-                      <Icon
-                        as={rowData.status === 'Active' ? IoMdRemoveCircle : IoMdCheckmarkCircle}
-                      />
-                    }
-                    appearance="subtle"
-                    size="xs"
-                    color={rowData.status === 'Active' ? 'red' : 'green'}
-                    onClick={() => handleToggleStatus(rowData.id as number)}
-                  />
-                  <IconButton
-                    icon={<Icon as={IoMdKey} />}
-                    appearance="subtle"
-                    size="xs"
-                    color="orange"
-                    onClick={() => handleResetPinClick(rowData.id as number)}
-                  />
-                  <IconButton
-                    icon={<Icon as={IoMdTrash} />}
-                    appearance="subtle"
-                    size="xs"
-                    color="red"
-                    onClick={() => handleDeleteUser(rowData.id as number)}
-                  />
-                </div>
+                <Whisper
+                  placement="bottomEnd"
+                  trigger="click"
+                  speaker={({ className, onClose, ...props }, ref) => {
+                    return (
+                      <Popover ref={ref} full {...props} className={`${className} shadow-md`}>
+                        <>
+                          <div className="px-2 pt-2 pb-2">
+                            <div className="flex flex-col items-start gap-y-2">
+                              <IconButton
+                                onClick={() => {
+                                  handleEditUserClick({
+                                    id: rowData.id as number,
+                                    name: rowData.name as string,
+                                    email: rowData.email as string,
+                                    role: rowData.role as string,
+                                  })
+                                  if (onClose) onClose()
+                                }}
+                                icon={<Icon as={FaUserEdit} />}
+                                color="blue"
+                                size="sm"
+                                appearance="primary"
+                              >
+                                Edit
+                              </IconButton>
+                              <IconButton
+                                onClick={() => {
+                                  handleToggleStatus(rowData.id as number)
+                                  if (onClose) onClose()
+                                }}
+                                icon={
+                                  <Icon
+                                    as={
+                                      rowData.status === 'Active'
+                                        ? IoMdRemoveCircle
+                                        : IoMdCheckmarkCircle
+                                    }
+                                  />
+                                }
+                                color={rowData.status === 'Active' ? 'red' : 'green'}
+                                size="sm"
+                                appearance="primary"
+                              >
+                                {rowData.status === 'Active' ? 'Disable' : 'Enable'}
+                              </IconButton>
+                              <IconButton
+                                onClick={() => {
+                                  handleResetPinClick(rowData.id as number)
+                                  if (onClose) onClose()
+                                }}
+                                icon={<Icon as={IoMdKey} />}
+                                color="orange"
+                                size="sm"
+                                appearance="primary"
+                              >
+                                Reset PIN
+                              </IconButton>
+                              <IconButton
+                                onClick={() => {
+                                  handleDeleteUser(rowData.id as number)
+                                  if (onClose) onClose()
+                                }}
+                                icon={<Icon as={IoMdTrash} />}
+                                color="red"
+                                size="sm"
+                                appearance="primary"
+                              >
+                                Delete
+                              </IconButton>
+                            </div>
+                          </div>
+                        </>
+                      </Popover>
+                    )
+                  }}
+                >
+                  <IconButton icon={<Icon as={CgMore} />} size="xs" appearance="primary" />
+                </Whisper>
               )}
             </Cell>
           </Column>
@@ -659,6 +741,75 @@ const Page = () => {
           </Button>
           <Button startIcon={<Icon as={IoMdAdd} />} onClick={handleCreateUser} appearance="primary">
             Create
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* --- Edit User Modal --- */}
+      <Modal open={editUserOpen} onClose={() => setEditUserOpen(false)} size="xs" backdrop="static">
+        <Modal.Header closeButton={false}>
+          <Modal.Title>Edit User</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form
+            ref={editUserFormRef}
+            model={editUserModel}
+            formValue={editingUser || { role: 'User' }}
+            onChange={(val) =>
+              setEditingUser((prev) => ({
+                id: prev?.id || 0,
+                name: prev?.name || '',
+                email: prev?.email || '',
+                role: (val as typeof editingUser)?.role || prev?.role || 'User',
+              }))
+            }
+          >
+            <div className="grid grid-cols-1 gap-x-3 gap-y-4">
+              <Form.Stack fluid>
+                <Form.Group>
+                  <Form.Label>Name</Form.Label>
+                  <Form.Control name="name" readOnly />
+                </Form.Group>
+              </Form.Stack>
+              <Form.Stack fluid>
+                <Form.Group>
+                  <Form.Label>Email</Form.Label>
+                  <Form.Control name="email" readOnly />
+                </Form.Group>
+              </Form.Stack>
+              <Form.Stack fluid>
+                <Form.Group>
+                  <Form.Label>Role</Form.Label>
+                  <Form.Control
+                    cleanable={false}
+                    name="role"
+                    accepter={SelectPicker}
+                    data={[
+                      { label: 'Admin', value: 'Admin' },
+                      { label: 'User', value: 'User' },
+                    ]}
+                    searchable={false}
+                    block
+                  />
+                </Form.Group>
+              </Form.Stack>
+            </div>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            startIcon={<Icon as={IoMdClose} />}
+            onClick={() => setEditUserOpen(false)}
+            appearance="default"
+          >
+            Cancel
+          </Button>
+          <Button
+            startIcon={<Icon as={IoMdSave} />}
+            onClick={handleUpdateUser}
+            appearance="primary"
+          >
+            Save
           </Button>
         </Modal.Footer>
       </Modal>

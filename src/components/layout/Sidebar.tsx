@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router'
 import { cn } from '@/lib/cn'
 import { useSidebar } from '@/store/useSidebar'
 import { BiSolidDashboard } from 'react-icons/bi'
-import { FaBuildingColumns, FaPassport } from 'react-icons/fa6'
+import { FaBuildingColumns, FaMoneyBillTransfer, FaPassport } from 'react-icons/fa6'
 import { IoPricetagsSharp } from 'react-icons/io5'
 import { MdAccountBalanceWallet } from 'react-icons/md'
 import { TbCashBanknoteFilled } from 'react-icons/tb'
@@ -24,11 +24,11 @@ const sidebarItems = [
     children: [
       {
         label: 'Add Company',
-        path: '/addCompany',
+        path: '/add-company',
       },
       {
         label: 'List Company',
-        path: '/listCompany',
+        path: '/list-company',
       },
     ],
   },
@@ -39,11 +39,11 @@ const sidebarItems = [
     children: [
       {
         label: 'Add Sales',
-        path: '/addSales',
+        path: '/add-sales',
       },
       {
         label: 'List Sales',
-        path: '/listSales',
+        path: '/list-sales',
       },
     ],
   },
@@ -54,11 +54,11 @@ const sidebarItems = [
     children: [
       {
         label: 'Add Passport',
-        path: '/addPassport',
+        path: '/add-passport',
       },
       {
         label: 'List Passport',
-        path: '/listPassport',
+        path: '/list-passport',
       },
     ],
   },
@@ -69,15 +69,15 @@ const sidebarItems = [
     children: [
       {
         label: 'Receive Voucher',
-        path: '/receiveVoucher',
+        path: '/receive-voucher',
       },
       {
         label: 'Company Payment',
-        path: '/companyPayment',
+        path: '/company-payment',
       },
       {
         label: 'Payment Method',
-        path: '/paymentMethod',
+        path: '/payment-method',
       },
     ],
   },
@@ -88,7 +88,7 @@ const sidebarItems = [
     children: [
       {
         label: 'Fund Transfer',
-        path: '/fundTransfer',
+        path: '/fund-transfer',
       },
       {
         label: 'All Transaction',
@@ -103,15 +103,15 @@ const sidebarItems = [
   {
     type: 'menu',
     label: 'Expense',
-    icon: TbCashBanknoteFilled,
+    icon: FaMoneyBillTransfer,
     children: [
       {
         label: 'Add Expense',
-        path: '/addExpense',
+        path: '/add-expense',
       },
       {
-        label: 'All Expense',
-        path: '/allExpense',
+        label: 'List Expense',
+        path: '/list-expense',
       },
       {
         label: 'Expense Category',

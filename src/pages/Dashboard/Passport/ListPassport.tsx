@@ -2,7 +2,9 @@ import { Icon, Trash } from '@rsuite/icons'
 import { CgMore } from 'react-icons/cg'
 import { GrView } from 'react-icons/gr'
 import { TiEdit } from 'react-icons/ti'
-import { Table, Divider, IconButton, Whisper, Popover } from 'rsuite'
+import { Table, Divider, IconButton, Whisper, Popover, Modal, Form, Button, Textarea } from 'rsuite'
+import { useState } from 'react'
+import { useNavigate } from 'react-router'
 
 const { Column, HeaderCell, Cell } = Table
 
@@ -30,7 +32,22 @@ const data = [
   },
 ]
 
+type PassportItem = {
+  id: number
+  name: string
+  number: string
+  dateOfBirth: string | Date | null
+  expireDate: string | Date | null
+  mobile: string
+  email: string
+  remark: string
+}
+
 const Page = () => {
+  const navigate = useNavigate()
+  const [viewOpen, setViewOpen] = useState(false)
+  const [viewItem, setViewItem] = useState<PassportItem | null>(null)
+
   return (
     <>
       <Divider>List Passport</Divider>
@@ -79,7 +96,7 @@ const Page = () => {
           <HeaderCell>Action</HeaderCell>
 
           <Cell verticalAlign="middle">
-            {() => (
+            {(rowData) => (
               <Whisper
                 placement="bottomEnd"
                 trigger="click"
@@ -91,6 +108,8 @@ const Page = () => {
                           <div className="flex flex-col items-start gap-y-2">
                             <IconButton
                               onClick={() => {
+                                setViewItem(rowData as PassportItem)
+                                setViewOpen(true)
                                 if (onClose) onClose()
                               }}
                               icon={<Icon as={GrView} />}
@@ -103,6 +122,9 @@ const Page = () => {
 
                             <IconButton
                               onClick={() => {
+                                navigate(`/edit-passport/${(rowData as { id: number }).id}`, {
+                                  state: rowData,
+                                })
                                 if (onClose) onClose()
                               }}
                               icon={<Icon as={TiEdit} />}
@@ -137,6 +159,66 @@ const Page = () => {
           </Cell>
         </Column>
       </Table>
+      <Modal open={viewOpen} onClose={() => setViewOpen(false)} size="md" backdrop="static">
+        <Modal.Header closeButton={false}>
+          <Modal.Title>Passport Details</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {viewItem && (
+            <Form formValue={viewItem}>
+              <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
+                <Form.Stack fluid>
+                  <Form.Group controlId="name">
+                    <Form.Label>Passport Name</Form.Label>
+                    <Form.Control name="name" plaintext />
+                  </Form.Group>
+                </Form.Stack>
+                <Form.Stack fluid>
+                  <Form.Group controlId="number">
+                    <Form.Label>Passport Number</Form.Label>
+                    <Form.Control name="number" plaintext />
+                  </Form.Group>
+                </Form.Stack>
+                <Form.Stack fluid>
+                  <Form.Group controlId="dateOfBirth">
+                    <Form.Label>Date of Birth</Form.Label>
+                    <Form.Control name="dateOfBirth" plaintext />
+                  </Form.Group>
+                </Form.Stack>
+                <Form.Stack fluid>
+                  <Form.Group controlId="expireDate">
+                    <Form.Label>Expire Date</Form.Label>
+                    <Form.Control name="expireDate" plaintext />
+                  </Form.Group>
+                </Form.Stack>
+                <Form.Stack fluid>
+                  <Form.Group controlId="mobile">
+                    <Form.Label>Mobile</Form.Label>
+                    <Form.Control name="mobile" plaintext />
+                  </Form.Group>
+                </Form.Stack>
+                <Form.Stack fluid>
+                  <Form.Group controlId="email">
+                    <Form.Label>Email</Form.Label>
+                    <Form.Control name="email" plaintext />
+                  </Form.Group>
+                </Form.Stack>
+                <Form.Stack fluid className="md:col-span-2">
+                  <Form.Group controlId="remark">
+                    <Form.Label>Remark</Form.Label>
+                    <Form.Control name="remark" accepter={Textarea} plaintext rows={2} />
+                  </Form.Group>
+                </Form.Stack>
+              </div>
+            </Form>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button appearance="default" onClick={() => setViewOpen(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   )
 }

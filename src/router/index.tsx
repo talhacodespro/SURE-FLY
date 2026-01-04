@@ -4,16 +4,20 @@ import {
   Error,
   AddCompany,
   ListCompany,
+  EditCompany,
   AddSales,
   ListSales,
+  EditSales,
   AddPassport,
   ListPassport,
+  EditPassport,
   ReceiveVoucher,
   CompanyPayment,
   PaymentMethod,
   Profile,
   FundTransfer,
   AddExpense,
+  ListExpense,
 } from '@/pages'
 import { createBrowserRouter } from 'react-router'
 
@@ -30,48 +34,64 @@ const router = createBrowserRouter([
       },
 
       {
-        path: '/addCompany',
+        path: '/add-company',
         element: <AddCompany />,
       },
       {
-        path: '/listCompany',
+        path: '/list-company',
         element: <ListCompany />,
       },
       {
-        path: '/addSales',
+        path: '/edit-company/:id',
+        element: <EditCompany />,
+      },
+      {
+        path: '/add-sales',
         element: <AddSales />,
       },
       {
-        path: '/listSales',
+        path: '/list-sales',
         element: <ListSales />,
       },
       {
-        path: '/addPassport',
+        path: '/edit-sales/:id',
+        element: <EditSales />,
+      },
+      {
+        path: '/add-passport',
         element: <AddPassport />,
       },
       {
-        path: '/listPassport',
+        path: '/list-passport',
         element: <ListPassport />,
       },
       {
-        path: '/receiveVoucher',
+        path: '/edit-passport/:id',
+        element: <EditPassport />,
+      },
+      {
+        path: '/receive-voucher',
         element: <ReceiveVoucher />,
       },
       {
-        path: '/companyPayment',
+        path: '/company-payment',
         element: <CompanyPayment />,
       },
       {
-        path: '/paymentMethod',
+        path: '/payment-method',
         element: <PaymentMethod />,
       },
       {
-        path: '/fundTransfer',
+        path: '/fund-transfer',
         element: <FundTransfer />,
       },
       {
-        path: '/addExpense',
+        path: '/add-expense',
         element: <AddExpense />,
+      },
+      {
+        path: '/list-expense',
+        element: <ListExpense />,
       },
     ],
   },

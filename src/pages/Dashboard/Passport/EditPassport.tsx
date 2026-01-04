@@ -1,6 +1,6 @@
 import { Icon } from '@rsuite/icons'
-import { useState } from 'react'
-import { IoMdAdd } from 'react-icons/io'
+import { useRef, useState } from 'react'
+import { IoMdSave, IoMdClose } from 'react-icons/io'
 import {
   Form,
   Button,
@@ -11,10 +11,13 @@ import {
   StringType,
   DateType,
   Textarea,
+  Message,
+  toaster,
 } from 'rsuite'
+import type { FormInstance } from 'rsuite'
+import { useLocation, useNavigate } from 'react-router'
 
-// Form model
-const PassportModel = Schema.Model({
+const FormModel = Schema.Model({
   name: StringType().isRequired('Passport name is required.'),
   number: StringType().isRequired('Passport number is required.'),
   dateOfBirth: DateType().isRequired('Date of birth is required.'),
@@ -26,41 +29,62 @@ const PassportModel = Schema.Model({
   remark: StringType(),
 })
 
-// Initial form value
-const initialValue = {
-  name: '',
-  number: '',
-  dateOfBirth: null as Date | null,
-  expireDate: null as Date | null,
-  mobile: '',
-  email: '',
-  remark: '',
+type FormValue = {
+  name: string
+  number: string
+  dateOfBirth: Date | null
+  expireDate: Date | null
+  mobile: string
+  email: string
+  remark: string
 }
 
-// Type definition ⤵
-type FormValue = typeof initialValue
+const parseDate = (val: unknown): Date | null => {
+  if (!val) return null
+  if (val instanceof Date) return val
+  if (typeof val === 'string') {
+    const d = new Date(val)
+    return isNaN(d.getTime()) ? null : d
+  }
+  return null
+}
 
 const Page = () => {
-  // Form value
-  const [formValue, setFormValue] = useState<FormValue>(initialValue)
+  const navigate = useNavigate()
+  const { state } = useLocation() as {
+    state?: Partial<FormValue & { dateOfBirth?: unknown; expireDate?: unknown }>
+  }
 
-  // Handle form submit
-  const handleFormSubmit = () => {
-    setFormValue(initialValue)
+  const [formValue, setFormValue] = useState<FormValue>({
+    name: String(state?.name || ''),
+    number: String(state?.number || ''),
+    dateOfBirth: parseDate(state?.dateOfBirth),
+    expireDate: parseDate(state?.expireDate),
+    mobile: String(state?.mobile || ''),
+    email: String(state?.email || ''),
+    remark: String(state?.remark || ''),
+  })
+  const formRef = useRef<FormInstance>(null)
+
+  const handleSubmit = () => {
+    const valid = formRef.current?.check()
+    if (!valid) return
+    toaster.push(<Message type="success">Passport updated</Message>, { placement: 'bottomEnd' })
+    navigate('/list-passport')
   }
 
   return (
     <div className="bg-background container mx-auto max-w-4xl rounded-md p-5">
       <Heading level={4} className="text-center">
-        Passport Info
+        Edit Passport
       </Heading>
       <Divider />
       <div>
         <Form
-          model={PassportModel}
+          ref={formRef}
+          model={FormModel}
           formValue={formValue}
           onChange={(value) => setFormValue(value as FormValue)}
-          onSubmit={handleFormSubmit}
         >
           <div className="grid grid-cols-1 gap-x-3 gap-y-4 md:grid-cols-2">
             <Form.Stack fluid>
@@ -122,11 +146,24 @@ const Page = () => {
               </Form.Group>
             </Form.Stack>
           </div>
-          <Form.Group className="mt-5 flex justify-end">
-            <Button startIcon={<Icon as={IoMdAdd} />} appearance="primary" type="submit">
-              Add
+          <div className="mt-5 flex justify-end gap-2">
+            <Button
+              startIcon={<Icon as={IoMdSave} />}
+              appearance="primary"
+              type="button"
+              onClick={handleSubmit}
+            >
+              Save
             </Button>
-          </Form.Group>
+            <Button
+              startIcon={<Icon as={IoMdClose} />}
+              appearance="subtle"
+              type="button"
+              onClick={() => navigate('/list-passport')}
+            >
+              Cancel
+            </Button>
+          </div>
         </Form>
       </div>
     </div>

@@ -1,8 +1,7 @@
 import { Icon, Trash } from '@rsuite/icons'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { CgMore } from 'react-icons/cg'
 import { IoMdAdd, IoMdClose } from 'react-icons/io'
-import { TiEdit } from 'react-icons/ti'
 import {
   Button,
   Heading,
@@ -15,6 +14,7 @@ import {
   Form,
   NumberInput,
 } from 'rsuite'
+import type { FormInstance } from 'rsuite'
 import { NumberType, SchemaModel, StringType } from 'rsuite/Schema'
 
 const { Column, HeaderCell, Cell } = Table
@@ -55,6 +55,7 @@ type FormValue = typeof initialValue
 const Page = () => {
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [formValue, setFormValue] = useState<FormValue>(initialValue)
+  const formRef = useRef<FormInstance>(null)
 
   const handleClose = () => {
     setIsAddOpen(false)
@@ -62,7 +63,8 @@ const Page = () => {
   }
 
   const handleFormSubmit = () => {
-    // console.log('Form submitted', formValue)
+    const valid = formRef.current?.check()
+    if (!valid) return
     setFormValue(initialValue)
     setIsAddOpen(false)
   }
@@ -81,57 +83,62 @@ const Page = () => {
       </div>
       <Divider>Payment Method List</Divider>
       <Modal open={isAddOpen} onClose={handleClose} size="sm" backdrop="static">
-        <Form
-          model={FormModel}
-          formValue={formValue}
-          onChange={(value) => setFormValue(value as FormValue)}
-          onSubmit={handleFormSubmit}
-        >
-          <Modal.Header closeButton={false} className="pl-2">
-            <Modal.Title>Info</Modal.Title>
-          </Modal.Header>
-          <Modal.Body className="px-2">
+        <Modal.Header closeButton={false} className="pl-2">
+          <Modal.Title>Info</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="px-2">
+          <Form
+            ref={formRef}
+            model={FormModel}
+            formValue={formValue}
+            onChange={(value) => setFormValue(value as FormValue)}
+          >
             <div className="flex flex-col gap-y-4">
               <Form.Stack fluid>
                 <Form.Group controlId="accountName">
                   <Form.Label>Account Name</Form.Label>
-                  <Form.Control block name="accountName" />
+                  <Form.Control block name="accountName" errorPlacement="bottomEnd" />
                 </Form.Group>
               </Form.Stack>
               <Form.Stack fluid>
                 <Form.Group controlId="accountNumber">
                   <Form.Label>Account Number</Form.Label>
-                  <Form.Control block name="accountNumber" type="tel" />
+                  <Form.Control block name="accountNumber" type="tel" errorPlacement="bottomEnd" />
                 </Form.Group>
               </Form.Stack>
               <Form.Stack fluid>
                 <Form.Group controlId="bankName">
                   <Form.Label>Bank Name</Form.Label>
-                  <Form.Control block name="bankName" />
+                  <Form.Control block name="bankName" errorPlacement="bottomEnd" />
                 </Form.Group>
               </Form.Stack>
               <Form.Stack fluid className="mb-2">
                 <Form.Group controlId="openingBalance">
                   <Form.Label>Opening Balance</Form.Label>
-                  <Form.Control block name="openingBalance" accepter={NumberInput} />
+                  <Form.Control
+                    block
+                    name="openingBalance"
+                    accepter={NumberInput}
+                    errorPlacement="bottomStart"
+                  />
                 </Form.Group>
               </Form.Stack>
             </div>
-          </Modal.Body>
-          <Modal.Footer className="px-2">
-            <Button startIcon={<Icon as={IoMdAdd} />} appearance="primary" type="submit">
-              Add
-            </Button>
-            <Button
-              startIcon={<Icon as={IoMdClose} />}
-              appearance="subtle"
-              type="button"
-              onClick={handleClose}
-            >
-              Cancel
-            </Button>
-          </Modal.Footer>
-        </Form>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer className="px-2">
+          <Button
+            startIcon={<Icon as={IoMdClose} />}
+            appearance="default"
+            type="button"
+            onClick={handleClose}
+          >
+            Cancel
+          </Button>
+          <Button startIcon={<Icon as={IoMdAdd} />} appearance="primary" onClick={handleFormSubmit}>
+            Add
+          </Button>
+        </Modal.Footer>
       </Modal>
       <Table
         autoHeight
@@ -183,18 +190,6 @@ const Page = () => {
                       <>
                         <div className="px-2 pt-2 pb-2">
                           <div className="flex flex-col items-start gap-y-2">
-                            <IconButton
-                              onClick={() => {
-                                if (onClose) onClose()
-                              }}
-                              icon={<Icon as={TiEdit} />}
-                              color="blue"
-                              size="sm"
-                              appearance="primary"
-                            >
-                              Edit
-                            </IconButton>
-
                             <IconButton
                               onClick={() => {
                                 if (onClose) onClose()
