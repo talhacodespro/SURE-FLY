@@ -2,65 +2,69 @@ import { Icon, Trash } from '@rsuite/icons'
 import { CgMore } from 'react-icons/cg'
 import { GrView } from 'react-icons/gr'
 import { TiEdit } from 'react-icons/ti'
-import { Table, Divider, IconButton, Whisper, Popover, Modal, Button, Form, Textarea } from 'rsuite'
+import {
+  Table,
+  Divider,
+  IconButton,
+  Whisper,
+  Popover,
+  Modal,
+  Button,
+  Form,
+  Textarea,
+  SelectPicker,
+} from 'rsuite'
 import { useNavigate } from 'react-router'
 import { useState } from 'react'
+import { useCompanies } from '@/hooks/useCompany'
+import type { Company } from '@/lib/api/company'
+import { Message, toaster } from 'rsuite'
+import { useDeleteCompany } from '@/hooks/useCompany'
 
 const { Column, HeaderCell, Cell } = Table
 
-// Table data
-const data = [
-  {
-    id: 1,
-    name: 'SURE FLY LTD ',
-    mobile: '0123456789',
-    contactPersonName: 'Doe',
-    contactPersonMobile: '0123456789',
-    email: 'john@example.com',
-    address: '123 Main St',
-    remarks: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-  },
-  {
-    id: 2,
-    name: 'Jane',
-    mobile: '0123456789',
-    contactPersonName: 'Doe',
-    contactPersonMobile: '0123456789',
-    email: 'jane@example.com',
-    address: '456 Main St',
-    remarks:
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. alksdf al;ksdfmalsdf alsdkfnal;sdkfna;lksdf asodkfjmal;skdf aoksdfn;alskdf, ;alksdlfapskdf ',
-  },
-]
-
 const Page = () => {
   const navigate = useNavigate()
-  type Company = {
-    id: number
-    name: string
-    mobile: string
-    contactPersonName: string
-    contactPersonMobile: string
-    email: string
-    address: string
-    remarks: string
-  }
+  const deleteMutation = useDeleteCompany()
+  const { data, isLoading } = useCompanies()
+  const companiesData = (data?.data ?? []) as Company[]
+
+  type ViewCompany = Company
   const [viewOpen, setViewOpen] = useState(false)
-  const [viewCompany, setViewCompany] = useState<Company | null>(null)
-  const emptyCompany: Company = {
+  const [viewCompany, setViewCompany] = useState<ViewCompany | null>(null)
+  const [query, setQuery] = useState('')
+  const pickerData = companiesData.map((v) => ({ label: v.name, value: v.name }))
+  const emptyCompany: ViewCompany = {
     id: 0,
     name: '',
-    mobile: '',
-    contactPersonName: '',
-    contactPersonMobile: '',
+    phone: '',
+    contactName: '',
+    contactPhone: '',
     email: '',
     address: '',
     remarks: '',
   }
+
   return (
     <>
+      <div className="mb-3 w-80">
+        <SelectPicker
+          placeholder="Search by name"
+          data={pickerData}
+          value={query || null}
+          block
+          onChange={(val) => setQuery(val || '')}
+        />
+      </div>
       <Divider>List Company</Divider>
-      <Table autoHeight bordered cellBordered data={data} onRowClick={() => {}}>
+      <Table
+        autoHeight
+        bordered
+        cellBordered
+        data={companiesData}
+        loading={isLoading}
+        onRowClick={() => {}}
+      >
         <Column width={60} align="center" fixed>
           <HeaderCell>Id</HeaderCell>
           <Cell dataKey="id" />
@@ -71,19 +75,24 @@ const Page = () => {
           <Cell dataKey="name" />
         </Column>
 
-        <Column width={180}>
-          <HeaderCell>Company Mobile</HeaderCell>
-          <Cell dataKey="mobile" />
+        <Column width={250}>
+          <HeaderCell>Email</HeaderCell>
+          <Cell dataKey="email" />
         </Column>
 
-        {/* <Column flexGrow={1} minWidth={200}>
+        <Column width={180}>
+          <HeaderCell>Company Mobile</HeaderCell>
+          <Cell dataKey="phone" />
+        </Column>
+
+        <Column flexGrow={1} minWidth={200}>
           <HeaderCell>Contact Person Name</HeaderCell>
-          <Cell dataKey="contactPersonName" />
-        </Column> */}
+          <Cell dataKey="contactName" />
+        </Column>
 
         <Column width={180}>
           <HeaderCell>Contact Person Mobile</HeaderCell>
-          <Cell dataKey="contactPersonMobile" />
+          <Cell dataKey="contactPhone" />
         </Column>
 
         <Column flexGrow={1} minWidth={250}>
@@ -107,7 +116,7 @@ const Page = () => {
                           <div className="flex flex-col items-start gap-y-2">
                             <IconButton
                               onClick={() => {
-                                setViewCompany(rowData as Company)
+                                setViewCompany(rowData as ViewCompany)
                                 setViewOpen(true)
                                 if (onClose) onClose()
                               }}
@@ -134,12 +143,26 @@ const Page = () => {
 
                             <IconButton
                               onClick={() => {
+                                deleteMutation.mutate((rowData as { id: number }).id, {
+                                  onSuccess: () => {
+                                    toaster.push(
+                                      <Message type="success">Company deleted</Message>,
+                                      { placement: 'bottomEnd' },
+                                    )
+                                  },
+                                  onError: () => {
+                                    toaster.push(<Message type="error">Failed to delete</Message>, {
+                                      placement: 'bottomEnd',
+                                    })
+                                  },
+                                })
                                 if (onClose) onClose()
                               }}
                               icon={<Icon as={Trash} />}
                               color="red"
                               size="sm"
                               appearance="primary"
+                              loading={deleteMutation.isPending}
                             >
                               Delete
                             </IconButton>
@@ -171,21 +194,21 @@ const Page = () => {
                   </Form.Group>
                 </Form.Stack>
                 <Form.Stack fluid>
-                  <Form.Group controlId="mobile">
+                  <Form.Group controlId="phone">
                     <Form.Label>Company Mobile</Form.Label>
-                    <Form.Control name="mobile" plaintext />
+                    <Form.Control name="phone" plaintext />
                   </Form.Group>
                 </Form.Stack>
                 <Form.Stack fluid>
-                  <Form.Group controlId="contactPersonName">
+                  <Form.Group controlId="contactName">
                     <Form.Label>Contact Person Name</Form.Label>
-                    <Form.Control name="contactPersonName" plaintext />
+                    <Form.Control name="contactName" plaintext />
                   </Form.Group>
                 </Form.Stack>
                 <Form.Stack fluid>
-                  <Form.Group controlId="contactPersonMobile">
+                  <Form.Group controlId="contactPhone">
                     <Form.Label>Contact Person Mobile</Form.Label>
-                    <Form.Control name="contactPersonMobile" plaintext />
+                    <Form.Control name="contactPhone" plaintext />
                   </Form.Group>
                 </Form.Stack>
                 <Form.Stack fluid className="md:col-span-2">

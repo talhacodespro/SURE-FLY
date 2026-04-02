@@ -2,6 +2,7 @@ import { useTheme } from '@/store/useTheme'
 import type { ReactNode } from 'react'
 import { CustomProvider } from 'rsuite'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 //  all provider defined here and wrap the app ⤵
 const Provider = ({ children }: { children: ReactNode }) => {
@@ -24,6 +25,7 @@ const Provider = ({ children }: { children: ReactNode }) => {
         <CustomProvider theme={theme} disableRipple>
           {children}
         </CustomProvider>
+        <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </>
   )

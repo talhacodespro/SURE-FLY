@@ -7,7 +7,7 @@ type ThemeState = {
   setTheme: (theme: Theme) => void
 }
 
-export const useTheme = create<ThemeState>()((set) => ({
+export const useTheme = create<ThemeState>((set) => ({
   theme: (localStorage.getItem('theme') as Theme) || 'light',
   setTheme: (theme: Theme) => set({ theme }),
 }))

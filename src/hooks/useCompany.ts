@@ -6,29 +6,36 @@ import {
   getCompanies,
   updateCompany,
 } from '@/lib/api/company'
-import type { Company, CreateCompanyPayload, UpdateCompanyPayload } from '@/lib/api/company'
+import type { CreateCompanyPayload, UpdateCompanyPayload } from '@/lib/api/company'
+import { toaster } from 'rsuite'
+import message from '@/utils/message'
 
 export const useCompanies = () => {
-  return useQuery<Company[], Error>({
+  return useQuery({
     queryKey: ['companies'],
     queryFn: getCompanies,
+    staleTime: 1000 * 60 * 5,
   })
 }
 
-export const useCompany = (id: number | string, enabled = true) => {
-  return useQuery<Company, Error>({
+export const useCompany = (id: number, enabled = true) => {
+  return useQuery({
     queryKey: ['company', id],
-    queryFn: () => getCompany(id),
+    queryFn: async () => {
+      const res = await getCompany(Number(id))
+      return res.data
+    },
     enabled: Boolean(id) && enabled,
   })
 }
 
 export const useCreateCompany = () => {
   const qc = useQueryClient()
-  return useMutation<Company, Error, CreateCompanyPayload>({
+  return useMutation({
     mutationKey: ['company', 'create'],
-    mutationFn: (payload) => createCompany(payload),
-    onSuccess: () => {
+    mutationFn: (payload: CreateCompanyPayload) => createCompany(payload),
+    onSuccess: (res) => {
+      toaster.push(message({ message: res.message, type: 'success' }), { placement: 'bottomEnd' })
       qc.invalidateQueries({ queryKey: ['companies'] })
     },
   })
@@ -36,21 +43,23 @@ export const useCreateCompany = () => {
 
 export const useUpdateCompany = () => {
   const qc = useQueryClient()
-  return useMutation<Company, Error, { id: number | string; payload: UpdateCompanyPayload }>({
+  return useMutation({
     mutationKey: ['company', 'update'],
-    mutationFn: ({ id, payload }) => updateCompany(id, payload),
-    onSuccess: (data) => {
+    mutationFn: ({ id, payload }: { id: number; payload: UpdateCompanyPayload }) =>
+      updateCompany(id, payload),
+    onSuccess: (res) => {
+      toaster.push(message({ message: res.message, type: 'success' }), { placement: 'bottomEnd' })
       qc.invalidateQueries({ queryKey: ['companies'] })
-      qc.invalidateQueries({ queryKey: ['company', data.id] })
+      qc.invalidateQueries({ queryKey: ['company', res.data.id] })
     },
   })
 }
 
 export const useDeleteCompany = () => {
   const qc = useQueryClient()
-  return useMutation<{ success: boolean }, Error, number | string>({
+  return useMutation({
     mutationKey: ['company', 'delete'],
-    mutationFn: (id) => deleteCompany(id),
+    mutationFn: (id: number) => deleteCompany(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['companies'] })
     },

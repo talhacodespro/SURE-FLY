@@ -115,7 +115,7 @@ const sidebarItems = [
       },
       {
         label: 'Expense Category',
-        path: '/expenseCategory',
+        path: '/expense-category',
       },
     ],
   },

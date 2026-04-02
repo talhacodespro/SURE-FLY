@@ -1,4 +1,7 @@
+import { useAuth } from '@/store/useAuth'
+import message from '@/utils/message'
 import axios, { AxiosHeaders } from 'axios'
+import { toaster } from 'rsuite'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1',
@@ -15,5 +18,22 @@ api.interceptors.request.use((config) => {
 
   return config
 })
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const messageData = error?.response?.data?.message || error?.message || 'Something went wrong'
+
+    toaster.push(message({ message: messageData, type: 'error' }), { placement: 'bottomEnd' })
+
+    if (error?.response?.status === 401) {
+      useAuth.getState().logout()
+      // localStorage.removeItem('token')
+      // window.location.href = '/login'
+    }
+
+    return Promise.reject(error)
+  },
+)
 
 export default api

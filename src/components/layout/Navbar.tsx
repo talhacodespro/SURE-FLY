@@ -58,6 +58,8 @@ const Navbar = () => {
   }
 
   const handleLogoutClick = () => {
+    localStorage.removeItem('token')
+    navigate('/login', { replace: true })
     closeMenu()
   }
 

@@ -1,16 +1,16 @@
 import { Icon } from '@rsuite/icons'
-import { useRef, useState } from 'react'
-import { IoMdSave, IoMdClose } from 'react-icons/io'
-import { Form, Button, Heading, Divider, Textarea, Message, toaster } from 'rsuite'
+import { useEffect, useRef, useState } from 'react'
+import { IoMdClose, IoMdSave } from 'react-icons/io'
+import { useNavigate, useParams } from 'react-router'
+import { Button, Divider, Form, type FormInstance, Heading, Textarea } from 'rsuite'
 import { SchemaModel, StringType } from 'rsuite/Schema'
-import { useNavigate } from 'react-router'
-import type { FormInstance } from 'rsuite'
+import { useCompany, useUpdateCompany } from '@/hooks/useCompany'
 
 const FormModel = SchemaModel({
   name: StringType().isRequired('Name is required.'),
-  mobile: StringType().isRequired('Mobile is required.'),
-  contactPersonName: StringType().isRequired('Contact person name is required.'),
-  contactPersonMobile: StringType().isRequired('Contact person mobile is required.'),
+  phone: StringType().isRequired('Mobile is required.'),
+  contactName: StringType().isRequired('Contact person name is required.'),
+  contactPhone: StringType().isRequired('Contact person mobile is required.'),
   email: StringType()
     .isEmail('Please enter a valid email address.')
     .isRequired('Email is required.'),
@@ -18,35 +18,47 @@ const FormModel = SchemaModel({
   remarks: StringType().isRequired('Remark is required.'),
 })
 
-type FormValue = {
-  name: string
-  mobile: string
-  contactPersonName: string
-  contactPersonMobile: string
-  email: string
-  address: string
-  remarks: string
+const DEFAULT_FORM_VALUE = {
+  name: '',
+  phone: '',
+  contactName: '',
+  contactPhone: '',
+  email: '',
+  address: '',
+  remarks: '',
 }
+
+type FormValue = typeof DEFAULT_FORM_VALUE
 
 const Page = () => {
   const navigate = useNavigate()
-  const [formValue, setFormValue] = useState<FormValue>({
-    name: '',
-    mobile: '',
-    contactPersonName: '',
-    contactPersonMobile: '',
-    email: '',
-    address: '',
-    remarks: '',
-  })
+  const { id } = useParams()
+  const { data, isLoading } = useCompany(Number(id), Boolean(id))
+  const { mutate: updateMutation, isPending } = useUpdateCompany()
+  const [formValue, setFormValue] = useState<FormValue>(DEFAULT_FORM_VALUE)
   const formRef = useRef<FormInstance>(null)
 
   const handleSubmit = () => {
-    const valid = formRef.current?.check()
-    if (!valid) return
-    toaster.push(<Message type="success">Company updated</Message>, { placement: 'bottomEnd' })
-    navigate('/list-company')
+    if (!formRef.current?.check()) return
+
+    updateMutation(
+      {
+        id: Number(id),
+        payload: formValue,
+      },
+      {
+        onSuccess: () => {
+          navigate('/list-company')
+        },
+      },
+    )
   }
+
+  useEffect(() => {
+    if (data) {
+      setFormValue(data)
+    }
+  }, [data])
 
   return (
     <div className="bg-background container mx-auto max-w-4xl rounded-md p-5">
@@ -69,21 +81,21 @@ const Page = () => {
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>
-              <Form.Group controlId="mobile">
-                <Form.Label>Company Mobile</Form.Label>
-                <Form.Control name="mobile" type="tel" errorPlacement="bottomEnd" />
+              <Form.Group controlId="phone">
+                <Form.Label>Company Phone</Form.Label>
+                <Form.Control name="phone" type="tel" errorPlacement="bottomEnd" />
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>
-              <Form.Group controlId="contactPersonName">
+              <Form.Group controlId="contactName">
                 <Form.Label>Contact Person Name</Form.Label>
-                <Form.Control name="contactPersonName" type="text" errorPlacement="bottomEnd" />
+                <Form.Control name="contactName" type="text" errorPlacement="bottomEnd" />
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>
-              <Form.Group controlId="contactPersonMobile">
-                <Form.Label>Contact Person Mobile</Form.Label>
-                <Form.Control name="contactPersonMobile" type="tel" errorPlacement="bottomEnd" />
+              <Form.Group controlId="contactPhone">
+                <Form.Label>Contact Person Phone</Form.Label>
+                <Form.Control name="contactPhone" type="tel" errorPlacement="bottomEnd" />
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>
@@ -111,6 +123,8 @@ const Page = () => {
               appearance="primary"
               type="button"
               onClick={handleSubmit}
+              loading={isPending || isLoading}
+              disabled={isPending || isLoading}
             >
               Save
             </Button>

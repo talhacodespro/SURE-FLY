@@ -27,3 +27,4 @@ export { default as FundTransfer } from './CashManager/FundTransfer'
 // Expense
 export { default as AddExpense } from './Expense/AddExpense'
 export { default as ListExpense } from './Expense/ListExpense'
+export { default as ExpenseCategory } from './Expense/ExpenseCategory'

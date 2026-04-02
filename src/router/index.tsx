@@ -15,17 +15,24 @@ import {
   CompanyPayment,
   PaymentMethod,
   Profile,
+  Login,
   FundTransfer,
   AddExpense,
   ListExpense,
+  ExpenseCategory,
 } from '@/pages'
 import { createBrowserRouter } from 'react-router'
+import RequireAuth from '@/guards/RequireAuth'
 
 // router defined here and mange the app ⤵
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <DashboardLayout />,
+    element: (
+      <RequireAuth>
+        <DashboardLayout />
+      </RequireAuth>
+    ),
     errorElement: <Error />,
     children: [
       {
@@ -93,11 +100,23 @@ const router = createBrowserRouter([
         path: '/list-expense',
         element: <ListExpense />,
       },
+      {
+        path: '/expense-category',
+        element: <ExpenseCategory />,
+      },
     ],
   },
   {
     path: '/profile',
-    element: <Profile />,
+    element: (
+      <RequireAuth>
+        <Profile />
+      </RequireAuth>
+    ),
+  },
+  {
+    path: '/login',
+    element: <Login />,
   },
 ])
 

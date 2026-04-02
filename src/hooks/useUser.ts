@@ -6,7 +6,10 @@ import type {
   LoginPayload,
   UpdateUserPayload,
   User,
+  MeData,
 } from '@/lib/api/user'
+import type { ApiResponse } from '@/types/api'
+import { useAuth } from '@/store/useAuth'
 
 export const useUsers = () => {
   return useQuery<User[], Error>({
@@ -61,16 +64,16 @@ export const useLogin = () => {
   const qc = useQueryClient()
   return useMutation<AuthResponse, Error, LoginPayload>({
     mutationKey: ['auth', 'login'],
-    mutationFn: (payload) => login(payload),
+    mutationFn: login,
     onSuccess: (res) => {
-      localStorage.setItem('token', res.token)
+      useAuth.getState().login(res.data.token)
       qc.invalidateQueries({ queryKey: ['auth', 'me'] })
     },
   })
 }
 
 export const useMe = () => {
-  return useQuery<User, Error>({
+  return useQuery<ApiResponse<MeData>, Error>({
     queryKey: ['auth', 'me'],
     queryFn: me,
   })

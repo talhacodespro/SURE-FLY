@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Avatar,
   Button,
@@ -15,13 +15,13 @@ import {
   Uploader,
   toaster,
   Message,
-  PinInput,
   Table,
   SelectPicker,
   IconButton,
   Tag,
   Whisper,
   Popover,
+  PasswordInput,
 } from 'rsuite'
 import { Link } from 'react-router'
 import { Icon } from '@rsuite/icons'
@@ -34,21 +34,23 @@ import {
   IoMdKey,
   IoMdRemoveCircle,
   IoMdCheckmarkCircle,
-  IoMdRefresh,
 } from 'react-icons/io'
 import { RxAvatar } from 'react-icons/rx'
 import type { FormInstance } from 'rsuite'
 import { FaUserEdit } from 'react-icons/fa'
 import { CgMore } from 'react-icons/cg'
 import { IoKeySharp } from 'react-icons/io5'
+import { useMe } from '@/hooks/useUser'
 
 const Page = () => {
+  const { data: me } = useMe()
+
   // --- Profile State ---
   const [profile, setProfile] = useState({
     name: 'User Name',
     email: 'user@example.com',
-    mobile: '0123456789',
-    address: 'Dhaka, Bangladesh',
+    mobile: '01300000000',
+    address: '',
     dob: null as Date | null,
     avatarUrl: '',
   })
@@ -56,8 +58,37 @@ const Page = () => {
   const [editOpen, setEditOpen] = useState(false)
   const [formValue, setFormValue] = useState({ ...profile })
   const [fileInfo, setFileInfo] = useState<string | null>(null)
-  const [pinOpen, setPinOpen] = useState(false)
-  const [pinFormValue, setPinFormValue] = useState({ currentPin: '', newPin: '', confirmPin: '' })
+  const [passwordOpen, setPasswordOpen] = useState(false)
+  const [passwordFormValue, setPasswordFormValue] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
+
+  useEffect(() => {
+    const user = me?.data
+    if (user) {
+      const dob = user.dob ? new Date(user.dob) : null
+      setProfile((prev) => ({
+        ...prev,
+        name: user.fullName || prev.name,
+        email: user.email || prev.email,
+        mobile: user.phone || prev.mobile,
+        address: user.address || prev.address,
+        avatarUrl: user.avatar || prev.avatarUrl,
+        dob,
+      }))
+      setFormValue((prev) => ({
+        ...prev,
+        name: user.fullName || prev.name,
+        email: user.email || prev.email,
+        mobile: user.phone || prev.mobile,
+        address: user.address || prev.address,
+        avatarUrl: user.avatar || prev.avatarUrl,
+        dob,
+      }))
+    }
+  }, [me])
 
   // --- Profile Validation Schema ---
   const model = useMemo(() => {
@@ -80,7 +111,7 @@ const Page = () => {
   }
 
   const formRef = useRef<FormInstance>(null)
-  const pinFormRef = useRef<FormInstance>(null)
+  const passwordFormRef = useRef<FormInstance>(null)
 
   // --- Update Profile Handler ---
   const handleSubmit = () => {
@@ -96,31 +127,31 @@ const Page = () => {
     )
   }
 
-  // --- PIN Validation Schema ---
-  const pinModel = useMemo(() => {
+  // --- Password Validation Schema ---
+  const passwordModel = useMemo(() => {
     return Schema.Model({
-      currentPin: StringType()
-        .isRequired('Current PIN is required.')
-        .addRule((value) => /^\d{6}$/.test(value), 'Current PIN must be 6 digits.'),
-      newPin: StringType()
-        .isRequired('New PIN is required.')
-        .addRule((value) => /^\d{6}$/.test(value), 'PIN must be 6 digits.'),
-      confirmPin: StringType()
-        .isRequired('Confirm PIN is required.')
-        .addRule((value, data) => value === data.newPin, "PIN doesn't match."),
+      currentPassword: StringType()
+        .isRequired('Current password is required.')
+        .addRule((value) => value.length >= 6, 'Password must be at least 6 characters.'),
+      newPassword: StringType()
+        .isRequired('New password is required.')
+        .addRule((value) => value.length >= 6, 'Password must be at least 6 characters.'),
+      confirmPassword: StringType()
+        .isRequired('Confirm password is required.')
+        .addRule((value, data) => value === data.newPassword, "Password doesn't match."),
     })
   }, [])
 
-  // --- Change PIN Handler ---
-  const handlePinSubmit = () => {
-    const valid = pinFormRef.current?.check()
+  // --- Change Password Handler ---
+  const handlePasswordSubmit = () => {
+    const valid = passwordFormRef.current?.check()
     if (!valid) return
     setProfile((prev) => ({ ...prev }))
-    setPinOpen(false)
-    setPinFormValue({ currentPin: '', newPin: '', confirmPin: '' })
+    setPasswordOpen(false)
+    setPasswordFormValue({ currentPassword: '', newPassword: '', confirmPassword: '' })
     toaster.push(
       <Message showIcon type="success">
-        PIN changed successfully
+        Password changed successfully
       </Message>,
       { placement: 'bottomEnd' },
     )
@@ -157,7 +188,8 @@ const Page = () => {
     address: '',
     dob: null as Date | null,
     role: 'User',
-    pin: '',
+    password: '',
+    confirmPassword: '',
   })
   const createUserFormRef = useRef<FormInstance>(null)
   const [editUserOpen, setEditUserOpen] = useState(false)
@@ -168,6 +200,9 @@ const Page = () => {
     role: string
   } | null>(null)
   const editUserFormRef = useRef<FormInstance>(null)
+  const [resetPasswordOpen, setResetPasswordOpen] = useState(false)
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
+  const [resetPassword, setResetPassword] = useState({ newPassword: '', confirmPassword: '' })
 
   // --- Create User Validation Schema ---
   const userModel = useMemo(() => {
@@ -178,9 +213,12 @@ const Page = () => {
       address: StringType().isRequired('Address is required.'),
       dob: DateType().isRequired('Date of Birth is required.'),
       role: StringType().isRequired('Role is required.'),
-      pin: StringType()
-        .isRequired('PIN is required.')
-        .addRule((value) => /^\d{6}$/.test(value), 'PIN must be 6 digits.'),
+      password: StringType()
+        .isRequired('Password is required.')
+        .addRule((value) => value.length >= 6, 'Password must be at least 6 characters.'),
+      confirmPassword: StringType()
+        .isRequired('Confirm password is required.')
+        .addRule((value, data) => value === data.password, "Password doesn't match."),
     })
   }, [])
   const editUserModel = useMemo(() => {
@@ -211,7 +249,8 @@ const Page = () => {
       address: '',
       dob: null,
       role: 'User',
-      pin: '',
+      password: '',
+      confirmPassword: '',
     })
     toaster.push(<Message type="success">User created successfully</Message>, {
       placement: 'bottomEnd',
@@ -252,31 +291,7 @@ const Page = () => {
     toaster.push(<Message type="info">User status updated</Message>, { placement: 'bottomEnd' })
   }
 
-  // --- Reset PIN Logic (Admin) ---
-  const [resetPinOpen, setResetPinOpen] = useState(false)
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
-  const [resetPinValue, setResetPinValue] = useState('')
-
-  const handleResetPinClick = (id: number) => {
-    setSelectedUserId(id)
-    setResetPinValue('')
-    setResetPinOpen(true)
-  }
-
-  const handleUpdatePin = () => {
-    if (!/^\d{6}$/.test(resetPinValue)) {
-      toaster.push(<Message type="error">PIN must be 6 digits</Message>, { placement: 'bottomEnd' })
-      return
-    }
-    // Update logic to use selectedUserId (simulated)
-    setUserList((prev) =>
-      prev.map((u) => (u.id === selectedUserId ? { ...u, pin: resetPinValue } : u)),
-    )
-    setResetPinOpen(false)
-    toaster.push(<Message type="success">PIN reset successfully</Message>, {
-      placement: 'bottomEnd',
-    })
-  }
+  // --- Reset Password Logic (Admin) ---
 
   const { Column, HeaderCell, Cell } = Table
 
@@ -320,9 +335,9 @@ const Page = () => {
               <Button
                 startIcon={<Icon as={IoKeySharp} />}
                 appearance="default"
-                onClick={() => setPinOpen(true)}
+                onClick={() => setPasswordOpen(true)}
               >
-                Change PIN
+                Change Password
               </Button>
             </div>
           </div>
@@ -466,35 +481,35 @@ const Page = () => {
           </Button>
         </Modal.Footer>
       </Modal>
-      {/* --- Change PIN Modal --- */}
-      <Modal open={pinOpen} onClose={() => setPinOpen(false)} size="xs" backdrop="static">
+      {/* --- Change Password Modal --- */}
+      <Modal open={passwordOpen} onClose={() => setPasswordOpen(false)} size="xs" backdrop="static">
         <Modal.Header closeButton={false}>
-          <Modal.Title>Change PIN</Modal.Title>
+          <Modal.Title>Change Password</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form
-            ref={pinFormRef}
-            model={pinModel}
-            formValue={pinFormValue}
-            onChange={(val) => setPinFormValue(val as typeof pinFormValue)}
+            ref={passwordFormRef}
+            model={passwordModel}
+            formValue={passwordFormValue}
+            onChange={(val) => setPasswordFormValue(val as typeof passwordFormValue)}
           >
             <div className="grid grid-cols-1 gap-x-3 gap-y-4">
               <Form.Stack fluid>
                 <Form.Group>
-                  <Form.Label>Current PIN</Form.Label>
-                  <Form.Control name="currentPin" accepter={PinInput} length={6} />
+                  <Form.Label>Current Password</Form.Label>
+                  <Form.Control name="currentPassword" type="password" accepter={PasswordInput} />
                 </Form.Group>
               </Form.Stack>
               <Form.Stack fluid>
                 <Form.Group>
-                  <Form.Label>New PIN</Form.Label>
-                  <Form.Control name="newPin" accepter={PinInput} length={6} />
+                  <Form.Label>New Password</Form.Label>
+                  <Form.Control name="newPassword" type="password" accepter={PasswordInput} />
                 </Form.Group>
               </Form.Stack>
               <Form.Stack fluid className="mb-4">
                 <Form.Group>
-                  <Form.Label>Confirm PIN</Form.Label>
-                  <Form.Control name="confirmPin" accepter={PinInput} length={6} />
+                  <Form.Label>Confirm Password</Form.Label>
+                  <Form.Control name="confirmPassword" type="password" accepter={PasswordInput} />
                 </Form.Group>
               </Form.Stack>
             </div>
@@ -504,12 +519,16 @@ const Page = () => {
           <Button
             startIcon={<Icon as={IoMdClose} />}
             appearance="default"
-            onClick={() => setPinOpen(false)}
+            onClick={() => setPasswordOpen(false)}
           >
             Cancel
           </Button>
-          <Button startIcon={<Icon as={IoMdSave} />} appearance="primary" onClick={handlePinSubmit}>
-            Save PIN
+          <Button
+            startIcon={<Icon as={IoMdSave} />}
+            appearance="primary"
+            onClick={handlePasswordSubmit}
+          >
+            Save Password
           </Button>
         </Modal.Footer>
       </Modal>
@@ -633,7 +652,9 @@ const Page = () => {
                               </IconButton>
                               <IconButton
                                 onClick={() => {
-                                  handleResetPinClick(rowData.id as number)
+                                  setSelectedUserId(rowData.id as number)
+                                  setResetPassword({ newPassword: '', confirmPassword: '' })
+                                  setResetPasswordOpen(true)
                                   if (onClose) onClose()
                                 }}
                                 icon={<Icon as={IoMdKey} />}
@@ -641,7 +662,7 @@ const Page = () => {
                                 size="sm"
                                 appearance="primary"
                               >
-                                Reset PIN
+                                Reset Password
                               </IconButton>
                               <IconButton
                                 onClick={() => {
@@ -722,10 +743,16 @@ const Page = () => {
                   />
                 </Form.Group>
               </Form.Stack>
+              <Form.Stack fluid>
+                <Form.Group>
+                  <Form.Label>Password</Form.Label>
+                  <Form.Control name="password" type="password" accepter={PasswordInput} />
+                </Form.Group>
+              </Form.Stack>
               <Form.Stack fluid className="mb-2">
                 <Form.Group>
-                  <Form.Label>PIN</Form.Label>
-                  <Form.Control name="pin" accepter={PinInput} length={6} />
+                  <Form.Label>Confirm Password</Form.Label>
+                  <Form.Control name="confirmPassword" type="password" />
                 </Form.Group>
               </Form.Stack>
             </div>
@@ -814,33 +841,79 @@ const Page = () => {
         </Modal.Footer>
       </Modal>
 
-      {/* --- Reset PIN Modal (Admin) --- */}
-      <Modal open={resetPinOpen} onClose={() => setResetPinOpen(false)} size="xs" backdrop="static">
+      {/* --- Reset Password Modal (Admin) --- */}
+      <Modal
+        open={resetPasswordOpen}
+        onClose={() => setResetPasswordOpen(false)}
+        size="xs"
+        backdrop="static"
+      >
         <Modal.Header closeButton={false}>
-          <Modal.Title>Reset PIN</Modal.Title>
+          <Modal.Title>Reset Password</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form fluid>
             <Form.Group>
-              <Form.Label>New PIN</Form.Label>
-              <PinInput length={6} value={resetPinValue} onChange={setResetPinValue} autoFocus />
+              <Form.Label>New Password</Form.Label>
+              <Form.Control
+                name="newPassword"
+                type="password"
+                value={resetPassword.newPassword}
+                onChange={(val) => setResetPassword((p) => ({ ...p, newPassword: val as string }))}
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Confirm Password</Form.Label>
+              <Form.Control
+                name="confirmPassword"
+                type="password"
+                value={resetPassword.confirmPassword}
+                onChange={(val) =>
+                  setResetPassword((p) => ({ ...p, confirmPassword: val as string }))
+                }
+              />
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button
             startIcon={<Icon as={IoMdClose} />}
-            onClick={() => setResetPinOpen(false)}
+            onClick={() => setResetPasswordOpen(false)}
             appearance="default"
           >
             Cancel
           </Button>
           <Button
-            startIcon={<Icon as={IoMdRefresh} />}
-            onClick={handleUpdatePin}
+            startIcon={<Icon as={IoMdSave} />}
+            onClick={() => {
+              if (resetPassword.newPassword.length < 6) {
+                toaster.push(
+                  <Message type="error">Password must be at least 6 characters</Message>,
+                  {
+                    placement: 'bottomEnd',
+                  },
+                )
+                return
+              }
+              if (resetPassword.newPassword !== resetPassword.confirmPassword) {
+                toaster.push(<Message type="error">Password doesn't match</Message>, {
+                  placement: 'bottomEnd',
+                })
+                return
+              }
+              setUserList((prev) =>
+                prev.map((u) =>
+                  u.id === selectedUserId ? { ...u, password: resetPassword.newPassword } : u,
+                ),
+              )
+              setResetPasswordOpen(false)
+              toaster.push(<Message type="success">Password reset successfully</Message>, {
+                placement: 'bottomEnd',
+              })
+            }}
             appearance="primary"
           >
-            Reset PIN
+            Reset Password
           </Button>
         </Modal.Footer>
       </Modal>

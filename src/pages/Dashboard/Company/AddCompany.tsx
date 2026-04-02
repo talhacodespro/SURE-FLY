@@ -1,15 +1,18 @@
 import { Icon } from '@rsuite/icons'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { IoMdAdd } from 'react-icons/io'
 import { Form, Button, Heading, Divider, Textarea } from 'rsuite'
 import { SchemaModel, StringType } from 'rsuite/Schema'
+import type { FormInstance } from 'rsuite'
+import { useNavigate } from 'react-router'
+import { useCreateCompany } from '@/hooks/useCompany'
 
 // Form model
 const FormModel = SchemaModel({
   name: StringType().isRequired('Name is required.'),
-  mobile: StringType().isRequired('Mobile is required.'),
-  contactPersonName: StringType().isRequired('Contact person name is required.'),
-  contactPersonMobile: StringType().isRequired('Contact person mobile is required.'),
+  phone: StringType().isRequired('Phone is required.'),
+  contactName: StringType().isRequired('Contact person name is required.'),
+  contactPhone: StringType().isRequired('Contact person phone is required.'),
   email: StringType()
     .isEmail('Please enter a valid email address.')
     .isRequired('Email is required.'),
@@ -19,23 +22,36 @@ const FormModel = SchemaModel({
 
 // Initial form value
 const initialValue = {
-  type: '',
   name: '',
   email: '',
-  mobile: '',
+  phone: '',
   address: '',
+  contactName: '',
+  contactPhone: '',
+  remarks: '',
 }
 
 // Type definition ⤵
 type FormValue = typeof initialValue
 
 const Page = () => {
+  const { mutate: createCompany, isPending } = useCreateCompany()
   // Form value
   const [formValue, setFormValue] = useState<FormValue>(initialValue)
+  const formRef = useRef<FormInstance>(null)
+  const navigate = useNavigate()
 
   // Handle form submit
-  const handleFormSubmit = () => {
-    setFormValue(initialValue)
+  const handleFormSubmit = async () => {
+    const valid = formRef.current?.check()
+    if (!valid) return
+
+    createCompany(formValue, {
+      onSuccess: () => {
+        setFormValue(initialValue)
+        navigate('/list-company')
+      },
+    })
   }
 
   return (
@@ -46,6 +62,7 @@ const Page = () => {
       <Divider />
       <div>
         <Form
+          ref={formRef}
           model={FormModel}
           formValue={formValue}
           onChange={(value) => setFormValue(value as FormValue)}
@@ -59,21 +76,21 @@ const Page = () => {
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>
-              <Form.Group controlId="mobile">
-                <Form.Label>Company Mobile</Form.Label>
-                <Form.Control name="mobile" type="tel" errorPlacement="bottomEnd" />
+              <Form.Group controlId="phone">
+                <Form.Label>Company Phone</Form.Label>
+                <Form.Control name="phone" type="tel" errorPlacement="bottomEnd" />
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>
-              <Form.Group controlId="contactPersonName">
+              <Form.Group controlId="contactName">
                 <Form.Label>Contact Person Name</Form.Label>
-                <Form.Control name="contactPersonName" type="text" errorPlacement="bottomEnd" />
+                <Form.Control name="contactName" type="text" errorPlacement="bottomEnd" />
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>
-              <Form.Group controlId="contactPersonMobile">
-                <Form.Label>Contact Person Mobile</Form.Label>
-                <Form.Control name="contactPersonMobile" type="tel" errorPlacement="bottomEnd" />
+              <Form.Group controlId="contactPhone">
+                <Form.Label>Contact Person Phone</Form.Label>
+                <Form.Control name="contactPhone" type="tel" errorPlacement="bottomEnd" />
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>
@@ -96,7 +113,13 @@ const Page = () => {
             </Form.Stack>
           </div>
           <Form.Group className="mt-5 flex justify-end">
-            <Button startIcon={<Icon as={IoMdAdd} />} appearance="primary" type="submit">
+            <Button
+              disabled={isPending}
+              loading={isPending}
+              startIcon={<Icon as={IoMdAdd} />}
+              appearance="primary"
+              type="submit"
+            >
               Add
             </Button>
           </Form.Group>

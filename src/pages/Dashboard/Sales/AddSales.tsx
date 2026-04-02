@@ -90,6 +90,18 @@ const getExtraModel = (type: SalesType) => {
   }
 }
 
+// 🧩 Extra field keys (for identification)
+const getExtraFieldKeys = (type: SalesType): string[] => {
+  switch (type) {
+    case 'Ticket':
+      return ['ticketNumber', 'sector', 'ticketIssueDate', 'pnr', 'air', 'flightDate']
+    case 'Visa':
+      return ['country', 'visaType']
+    default:
+      return []
+  }
+}
+
 // 🧩 Initial values
 const initialValue = {
   salesType: 'Ticket',
@@ -150,6 +162,7 @@ const Page = () => {
     setFormValue({
       ...initialValue,
       salesType: selectedType,
+      ...getExtraValue(selectedType),
     })
   }, [selectedType])
 
@@ -164,22 +177,44 @@ const Page = () => {
   const handleFormSubmit = () => {
     const { salesType, ...rest } = formValue
 
-    //  🧩 Extra details structure based on selectedType
-    const details = getExtraValue(selectedType)
-    const filledDetails: Partial<typeof details> = {}
+    // Get extra field keys for current type
+    const extraFieldKeys = getExtraFieldKeys(selectedType)
 
-    //  🧩 Filter and assign only non-empty values
-    for (const key of Object.keys(details) as (keyof typeof details)[]) {
-      const value = rest[key]
+    // Separate extra details from common fields
+    const details: Record<string, string | Date> = {}
+    const commonFields: Record<string, unknown> = {}
 
-      //  🧩 Filter out empty values
-      if (value !== undefined && value !== null && value !== '') {
-        filledDetails[key] = (value instanceof Date ? value.toISOString() : value) as never
+    // Filter fields based on extra field keys
+    Object.keys(rest).forEach((key) => {
+      const value = rest[key as keyof typeof rest]
+
+      if (extraFieldKeys.includes(key)) {
+        // This is an extra detail field
+        // Filter out empty values
+        if (value !== undefined && value !== null && value !== '') {
+          details[key] = value instanceof Date ? value.toISOString() : value
+        }
+      } else {
+        // This is a common field
+        if (value !== undefined && value !== null && value !== '') {
+          commonFields[key] = value
+        }
       }
+    })
+
+    const finalData = {
+      salesType,
+      details,
+      ...commonFields,
     }
 
-    // final formatted data
-    setFormValue({ ...initialValue, salesType, ...getExtraValue(selectedType) })
+    // Reset form after successful submission (optional)
+    setFormValue({
+      ...initialValue,
+      salesType: selectedType,
+      ...getExtraValue(selectedType),
+    })
+    console.log('Final formatted data:', finalData)
   }
 
   // 🧩 Sales type data

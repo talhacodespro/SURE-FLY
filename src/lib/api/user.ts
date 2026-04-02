@@ -1,4 +1,5 @@
 import api from '@/lib/api/axios'
+import type { ApiResponse } from '@/types/api'
 import type { AxiosResponse } from 'axios'
 
 export type User = {
@@ -32,9 +33,25 @@ export type LoginPayload = {
   password: string
 }
 
-export type AuthResponse = {
+export type LoginData = {
   token: string
-  user: User
+}
+
+export type AuthResponse = ApiResponse<LoginData>
+
+export type MeData = {
+  id: number
+  fullName: string
+  email: string
+  phone: string | null
+  avatar: string | null
+  isPasswordSet: boolean
+  dob: string | null
+  address: string | null
+  isActive: boolean
+  role: string
+  createdAt: string
+  updatedAt: string
 }
 
 export const getUsers = async (): Promise<User[]> => {
@@ -70,7 +87,7 @@ export const login = async (payload: LoginPayload): Promise<AuthResponse> => {
   return res.data
 }
 
-export const me = async (): Promise<User> => {
-  const res: AxiosResponse<User> = await api.get('/auth/me')
+export const me = async (): Promise<ApiResponse<MeData>> => {
+  const res: AxiosResponse<ApiResponse<MeData>> = await api.get('/auth/me')
   return res.data
 }

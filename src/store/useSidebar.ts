@@ -5,7 +5,7 @@ type SidebarState = {
   setSidebar: (sidebar: boolean) => void
 }
 
-export const useSidebar = create<SidebarState>()((set) => ({
+export const useSidebar = create<SidebarState>((set) => ({
   sidebar: false,
   setSidebar: (sidebar: boolean) => set({ sidebar }),
 }))
