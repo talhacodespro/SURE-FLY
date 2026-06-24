@@ -4,7 +4,7 @@ import { Table, Divider, IconButton, Whisper, Popover } from 'rsuite'
 
 const { Column, HeaderCell, Cell } = Table
 
-// Table data
+// ========== Mock Expense List Data ==========
 const data = [
   {
     id: 1,
@@ -22,10 +22,12 @@ const data = [
   },
 ]
 
+// ========== List Expense Page Component ==========
 const Page = () => {
   return (
     <>
       <Divider>List Expense</Divider>
+      {/* ========== Expense Table ========== */}
       <Table autoHeight bordered cellBordered data={data}>
         <Column width={60} align="center" fixed>
           <HeaderCell>Id</HeaderCell>
@@ -52,6 +54,7 @@ const Page = () => {
           <Cell dataKey="remarks" />
         </Column>
 
+        {/* ========== Action Column with Popover Menu ========== */}
         <Column width={80} fixed="right" align="center">
           <HeaderCell>Action</HeaderCell>
 

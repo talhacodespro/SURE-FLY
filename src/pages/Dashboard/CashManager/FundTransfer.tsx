@@ -4,7 +4,7 @@ import { IoMdAdd } from 'react-icons/io'
 import { Form, Button, Heading, Divider, Textarea, SelectPicker, NumberInput } from 'rsuite'
 import { NumberType, SchemaModel, StringType } from 'rsuite/Schema'
 
-// Form model
+// ========== Form Validation Model ==========
 const FormModel = SchemaModel({
   fromAccount: StringType().isRequired('From Account is required.'),
   toAccount: StringType().isRequired('To Account is required.'),
@@ -22,7 +22,7 @@ const FormModel = SchemaModel({
   remarks: StringType().isRequired('Remark is required.'),
 })
 
-// Initial form value
+// ========== Initial Form Value ==========
 const initialValue = {
   fromAccount: '',
   toAccount: '',
@@ -33,10 +33,10 @@ const initialValue = {
   remarks: '',
 }
 
-// Type definition ⤵
+// ========== Form Value Type ==========
 type FormValue = typeof initialValue
 
-// Mock data for accounts
+// ========== Mock Account List Data ==========
 const accountList = [
   { label: 'Cash Account', value: 'cash', balance: 50000 },
   { label: 'Bank Asia', value: 'bank_asia', balance: 120000 },
@@ -44,11 +44,12 @@ const accountList = [
   { label: 'Bkash Agent', value: 'bkash', balance: 25000 },
 ]
 
+// ========== Fund Transfer Page Component ==========
 const Page = () => {
-  // Form value
+  // ========== Form Value State ==========
   const [formValue, setFormValue] = useState<FormValue>(initialValue)
 
-  // Handle form change
+  // ========== Handle Form Change ==========
   const handleFormChange = (value: FormValue) => {
     const updatedValue = { ...value }
 
@@ -67,9 +68,8 @@ const Page = () => {
     setFormValue(updatedValue)
   }
 
-  // Handle form submit
+  // ========== Handle Form Submit ==========
   const handleFormSubmit = () => {
-    console.log('Transferring funds:', formValue)
     setFormValue(initialValue)
   }
 
@@ -80,6 +80,7 @@ const Page = () => {
       </Heading>
       <Divider />
       <div>
+        {/* ========== Fund Transfer Form ========== */}
         <Form
           model={FormModel}
           formValue={formValue}

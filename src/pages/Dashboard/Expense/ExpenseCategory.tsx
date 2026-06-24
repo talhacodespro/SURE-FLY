@@ -8,6 +8,7 @@ import { SchemaModel, StringType } from 'rsuite/Schema'
 
 const { Column, HeaderCell, Cell } = Table
 
+// ========== Mock Expense Category Data ==========
 const data = [
   {
     id: 1,
@@ -21,28 +22,35 @@ const data = [
   },
 ]
 
+// ========== Form Validation Model ==========
 const FormModel = SchemaModel({
   categoryName: StringType().isRequired('Category name is required.'),
   remarks: StringType().isRequired('Remark is required.'),
 })
 
+// ========== Initial Form Value ==========
 const initialValue = {
   categoryName: '',
   remarks: '',
 }
 
+// ========== Form Value Type ==========
 type FormValue = typeof initialValue
 
+// ========== Expense Category Page Component ==========
 const Page = () => {
+  // ========== Modal and Form State ==========
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [formValue, setFormValue] = useState<FormValue>(initialValue)
   const formRef = useRef<FormInstance>(null)
 
+  // ========== Handle Modal Close ==========
   const handleClose = () => {
     setIsAddOpen(false)
     setFormValue(initialValue)
   }
 
+  // ========== Handle Form Submit ==========
   const handleFormSubmit = () => {
     const valid = formRef.current?.check()
     if (!valid) return
@@ -63,6 +71,7 @@ const Page = () => {
         </Button>
       </div>
       <Divider>Expense Category List</Divider>
+      {/* ========== Add Category Modal ========== */}
       <Modal open={isAddOpen} onClose={handleClose} size="sm" backdrop="static">
         <Modal.Header closeButton={false} className="pl-2">
           <Modal.Title>Category Info</Modal.Title>
@@ -104,6 +113,7 @@ const Page = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+      {/* ========== Expense Category Table ========== */}
       <Table
         autoHeight
         bordered
@@ -130,6 +140,7 @@ const Page = () => {
           <Cell dataKey="remarks" />
         </Column>
 
+        {/* ========== Action Column with Popover Menu ========== */}
         <Column width={80} fixed="right" align="center">
           <HeaderCell>Action</HeaderCell>
 

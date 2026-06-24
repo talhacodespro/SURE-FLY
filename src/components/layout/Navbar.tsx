@@ -7,6 +7,7 @@ import { LuLogOut } from 'react-icons/lu'
 import { Avatar, Center, IconButton, Menu, Popover, Whisper } from 'rsuite'
 import { useTheme } from '@/store/useTheme'
 import { useNavigate } from 'react-router'
+import { useAuth } from '@/store/useAuth'
 
 // ---------------
 // TYPES
@@ -46,6 +47,7 @@ MenuPopover.displayName = 'MenuPopover'
 const Navbar = () => {
   const { theme, setTheme } = useTheme() // Theme state
   const { sidebar, setSidebar } = useSidebar() // Sidebar toggle state
+  const logout = useAuth((state) => state.logout)
   const navigate = useNavigate()
 
   const whisperRef = useRef<WhisperInstance | null>(null)
@@ -58,7 +60,7 @@ const Navbar = () => {
   }
 
   const handleLogoutClick = () => {
-    localStorage.removeItem('token')
+    logout()
     navigate('/login', { replace: true })
     closeMenu()
   }

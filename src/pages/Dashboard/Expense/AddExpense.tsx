@@ -4,13 +4,14 @@ import { IoMdAdd } from 'react-icons/io'
 import { Form, Button, Heading, Divider, Textarea, SelectPicker, NumberInput } from 'rsuite'
 import { NumberType, SchemaModel, StringType } from 'rsuite/Schema'
 
-// --- Constants ---
+// ========== Account Data ==========
 const ACCOUNTS = [
   { label: 'Cash', value: 'Cash', balance: 100000 },
   { label: 'Bank', value: 'Bank', balance: 50000 },
   { label: 'Mobile Money', value: 'Mobile Money', balance: 20000 },
 ]
 
+// ========== Category Data ==========
 const CATEGORIES = [
   { label: 'Food', value: 'Food' },
   { label: 'Transport', value: 'Transport' },
@@ -19,7 +20,7 @@ const CATEGORIES = [
   { label: 'Others', value: 'Others' },
 ]
 
-// Form model
+// ========== Form Validation Model ==========
 const FormModel = SchemaModel({
   account: StringType().isRequired('Account selection is required.'),
   category: StringType().isRequired('Expense category is required.'),
@@ -30,7 +31,7 @@ const FormModel = SchemaModel({
   remarks: StringType().isRequired('Remark is required.'),
 })
 
-// --- Initial State ---
+// ========== Initial Form Value ==========
 const initialValues = {
   account: '',
   category: '',
@@ -39,14 +40,15 @@ const initialValues = {
   remarks: '',
 }
 
-// Type definition ⤵
+// ========== Form Value Type ==========
 type FormValue = typeof initialValues
 
+// ========== Add Expense Page Component ==========
 const Page = () => {
-  // Form value
+  // ========== Form Value State ==========
   const [formValue, setFormValue] = useState<FormValue>(initialValues)
 
-  // Handle form submit
+  // ========== Handle Form Submit ==========
   const handleFormSubmit = () => {
     setFormValue(initialValues)
   }
@@ -58,6 +60,7 @@ const Page = () => {
       </Heading>
       <Divider />
       <div>
+        {/* ========== Add Expense Form ========== */}
         <Form
           model={FormModel}
           formValue={formValue}

@@ -18,12 +18,16 @@ import { countries } from 'country-data-list'
 import moment from 'moment'
 import { IoMdAdd } from 'react-icons/io'
 import { Icon } from '@rsuite/icons'
+import { useSearchCompanies } from '@/hooks/useCompany'
+import { useSearchPassports } from '@/hooks/usePassport'
+import { useCreateSale } from '@/hooks/useSales'
+import type { CreateSalePayload } from '@/lib/api/sales'
 
-// Sales types
+// ========== Sales Types ==========
 const salesTypes = ['Ticket', 'Visa'] as const
 type SalesType = (typeof salesTypes)[number]
 
-// 🧩 Visa types
+// ========== Visa Types ==========
 const visaTypes = [
   'Tourist Visa',
   'Business Visa',
@@ -51,12 +55,19 @@ const visaTypes = [
   'Hajj Visa',
 ]
 
-// 🧩 Base validation model
+// ========== Base Validation Model ==========
 const baseModel = {
   salesType: StringType().isRequired('Sales type is required.'),
   purchaseFrom: StringType().isRequired('Purchase from is required.'),
   purchaseAmount: NumberType().isRequired('Purchase amount is required.'),
-  company: StringType().isRequired('Company name is required.'),
+  company: StringType()
+    .isRequired('Company name is required.')
+    .addRule((value, data) => {
+      if (value === data.purchaseFrom) {
+        return false
+      }
+      return true
+    }, 'Purchase from and Company cannot be same.'),
   amount: NumberType().isRequired('Amount is required.'),
   confirmAmount: NumberType()
     .isRequired('Confirm amount is required.')
@@ -68,12 +79,12 @@ const baseModel = {
   remarks: StringType().isRequired('Remarks is required.'),
 }
 
-// 🧩 Extra validation model (per type)
+// ========== Extra Validation Model (Per Sales Type) ==========
 const getExtraModel = (type: SalesType) => {
   switch (type) {
     case 'Ticket':
       return {
-        ticketNumber: NumberType().isRequired('Ticket number is required.'),
+        ticketNumber: StringType().isRequired('Ticket number is required.'),
         sector: StringType().isRequired('Sector is required.'),
         ticketIssueDate: DateType().isRequired('Ticket issue date is required.'),
         pnr: StringType().isRequired('PNR is required.'),
@@ -90,19 +101,7 @@ const getExtraModel = (type: SalesType) => {
   }
 }
 
-// 🧩 Extra field keys (for identification)
-const getExtraFieldKeys = (type: SalesType): string[] => {
-  switch (type) {
-    case 'Ticket':
-      return ['ticketNumber', 'sector', 'ticketIssueDate', 'pnr', 'air', 'flightDate']
-    case 'Visa':
-      return ['country', 'visaType']
-    default:
-      return []
-  }
-}
-
-// 🧩 Initial values
+// ========== Initial Form Value ==========
 const initialValue = {
   salesType: 'Ticket',
   purchaseFrom: '',
@@ -127,7 +126,7 @@ const initialValue = {
   visaType: '',
 }
 
-// 🧩 Extra values
+// ========== Extra Values (Per Sales Type) ==========
 const getExtraValue = (type: SalesType) => {
   switch (type) {
     case 'Ticket':
@@ -149,15 +148,19 @@ const getExtraValue = (type: SalesType) => {
   }
 }
 
+// ========== Add Sales Page Component ==========
 const Page = () => {
   const [selectedType, setSelectedType] = useState<SalesType>('Ticket')
+  const { data: companiesRes } = useSearchCompanies()
+  const { data: passportsRes } = useSearchPassports()
+  const { mutate: createSale, isPending: isCreating } = useCreateSale()
 
   const [formValue, setFormValue] = useState({
     ...initialValue,
     ...getExtraValue(selectedType),
   })
 
-  // 🔄 Reset form when type changes
+  // Reset form when type changes
   useEffect(() => {
     setFormValue({
       ...initialValue,
@@ -174,92 +177,90 @@ const Page = () => {
     })
   }, [selectedType])
 
+  // ========== Handle Form Submit ==========
   const handleFormSubmit = () => {
-    const { salesType, ...rest } = formValue
-
-    // Get extra field keys for current type
-    const extraFieldKeys = getExtraFieldKeys(selectedType)
-
-    // Separate extra details from common fields
-    const details: Record<string, string | Date> = {}
-    const commonFields: Record<string, unknown> = {}
-
-    // Filter fields based on extra field keys
-    Object.keys(rest).forEach((key) => {
-      const value = rest[key as keyof typeof rest]
-
-      if (extraFieldKeys.includes(key)) {
-        // This is an extra detail field
-        // Filter out empty values
-        if (value !== undefined && value !== null && value !== '') {
-          details[key] = value instanceof Date ? value.toISOString() : value
-        }
-      } else {
-        // This is a common field
-        if (value !== undefined && value !== null && value !== '') {
-          commonFields[key] = value
-        }
-      }
-    })
-
-    const finalData = {
+    const {
       salesType,
-      details,
-      ...commonFields,
+      purchaseFrom,
+      purchaseAmount,
+      company,
+      amount,
+      passport,
+      remarks,
+      ticketNumber,
+      ticketIssueDate,
+      sector,
+      pnr,
+      air,
+      flightDate,
+      country,
+      visaType,
+    } = formValue
+
+    const payload: CreateSalePayload = {
+      type: salesType.toUpperCase() as 'TICKET' | 'VISA',
+      purchaseAmount: Number(purchaseAmount),
+      companyAmount: Number(amount),
+      remarks,
+      passportId: Number(passport),
+      companyId: Number(company),
+      purchaseFromId: Number(purchaseFrom),
     }
 
-    // Reset form after successful submission (optional)
-    setFormValue({
-      ...initialValue,
-      salesType: selectedType,
-      ...getExtraValue(selectedType),
-    })
-    console.log('Final formatted data:', finalData)
+    if (salesType === 'Ticket') {
+      payload.ticket = {
+        ticketNo: ticketNumber,
+        issueDate: ticketIssueDate!,
+        sector,
+        pnr,
+        air,
+        flightDate: flightDate!,
+      }
+    } else if (salesType === 'Visa') {
+      payload.visa = {
+        country,
+        visaType,
+      }
+    }
+
+    createSale(payload)
   }
 
-  // 🧩 Sales type data
+  // ========== Sales Type Selector Data ==========
   const salesTypeData = salesTypes.map((item) => ({ label: item, value: item }))
 
-  // 🧩 visa type data
+  // ========== Visa Type Data ==========
   const visaTypeData = useMemo(() => {
     return visaTypes
       .sort((a, b) => a.localeCompare(b))
       .map((item) => ({ label: item, value: item }))
   }, [])
 
-  // 🧩 Country data for visit visa and employment visa
+  // ========== Country Data ==========
   const countryData = useMemo(() => {
     return countries.all
       .filter((item) => item.emoji && !['Israel', 'India'].includes(item.name))
       .map((item) => ({
         label: `${item.emoji} ${item.name}`,
-        value: item.alpha2,
+        value: item.name,
       }))
   }, [])
 
-  const purchaseFromData = useMemo(
-    () => [
-      { label: 'SURE FLY LTD', value: 'SURE FLY LTD' },
-      { label: 'Jane', value: 'Jane' },
-    ],
-    [],
-  )
+  // ========== Company Data ==========
+  const companyData = useMemo(() => {
+    return (companiesRes?.data || []).map((item) => ({
+      label: item.name,
+      value: String(item.id),
+    }))
+  }, [companiesRes])
 
-  const companyData = useMemo(
-    () => [
-      { label: 'SURE FLY LTD', value: 'SURE FLY LTD' },
-      { label: 'Jane', value: 'Jane' },
-    ],
-    [],
-  )
-
-  const passportData = useMemo(
-    () => [
-      { label: 'John (A15858199)', value: 'A15858199' },
-      { label: 'Jane (Doe)', value: 'Doe' },
-    ],
-    [],
-  )
+  // ========== Passport Data ==========
+  const passportData = useMemo(() => {
+    return (passportsRes?.data || []).map((item) => ({
+      label: `${item.fullName} • ${item.passportNo}`,
+      value: String(item.id),
+    }))
+  }, [passportsRes])
 
   return (
     <div className="bg-background container mx-auto max-w-4xl rounded-md p-5">
@@ -274,7 +275,7 @@ const Page = () => {
         onSubmit={handleFormSubmit}
       >
         <div className="grid grid-cols-1 gap-x-3 gap-y-4 md:grid-cols-2">
-          {/* Common fields */}
+          {/* ========== Common Fields ========== */}
           <Form.Stack fluid>
             <Form.Group controlId="salesType">
               <Form.Label>Sales Type</Form.Label>
@@ -297,7 +298,7 @@ const Page = () => {
               <Form.Control
                 name="purchaseFrom"
                 accepter={SelectPicker}
-                data={purchaseFromData}
+                data={companyData}
                 block
                 errorPlacement="bottomEnd"
               />
@@ -378,7 +379,7 @@ const Page = () => {
             </Form.Group>
           </Form.Stack>
 
-          {/* 🎯 Ticket fields */}
+          {/* ========== Ticket Fields ========== */}
           {selectedType === 'Ticket' && (
             <>
               <Form.Stack fluid>
@@ -438,7 +439,7 @@ const Page = () => {
             </>
           )}
 
-          {/* 🎯 Visit Visa fields */}
+          {/* ========== Visa Fields ========== */}
           {selectedType === 'Visa' && (
             <>
               <Form.Stack fluid>
@@ -449,7 +450,7 @@ const Page = () => {
                     accepter={SelectPicker}
                     data={countryData}
                     block
-                    placement="bottom"
+                    placement="topStart"
                     virtualized
                     errorPlacement="bottomEnd"
                   />
@@ -480,7 +481,13 @@ const Page = () => {
         </div>
 
         <Form.Group className="mt-5 flex justify-end">
-          <Button startIcon={<Icon as={IoMdAdd} />} appearance="primary" type="submit">
+          <Button
+            startIcon={<Icon as={IoMdAdd} />}
+            appearance="primary"
+            type="submit"
+            loading={isCreating}
+            disabled={isCreating}
+          >
             Add
           </Button>
         </Form.Group>

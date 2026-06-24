@@ -1,3 +1,4 @@
+import { useCreatePaymentMethod, usePaymentMethods } from '@/hooks/useTransaction'
 import { Icon, Trash } from '@rsuite/icons'
 import { useState, useRef } from 'react'
 import { CgMore } from 'react-icons/cg'
@@ -19,53 +20,48 @@ import { NumberType, SchemaModel, StringType } from 'rsuite/Schema'
 
 const { Column, HeaderCell, Cell } = Table
 
-const data = [
-  {
-    id: 1,
-    accountName: 'John Doe',
-    accountNumber: '1234567890',
-    bankName: 'Bank of America',
-    openingBalance: 1000,
-  },
-  {
-    id: 2,
-    accountName: 'Jane Smith',
-    accountNumber: '0987654321',
-    bankName: 'Chase Bank',
-    openingBalance: 2000,
-  },
-]
-
+// ========== Form Validation Model ==========
 const FormModel = SchemaModel({
   accountName: StringType().isRequired('Account name is required.'),
   accountNumber: StringType().isRequired('Account number is required.'),
   bankName: StringType().isRequired('Bank name is required.'),
-  openingBalance: NumberType().isRequired('Opening balance is required.'),
+  balance: NumberType().isRequired('Opening balance is required.'),
 })
 
+// ========== Initial Form Value ==========
 const initialValue = {
   accountName: '',
   accountNumber: '',
   bankName: '',
-  openingBalance: 0,
+  balance: 0,
 }
 
+// ========== Form Value Type ==========
 type FormValue = typeof initialValue
 
+// ========== Payment Method Page Component ==========
 const Page = () => {
+  // ========== Hooks ==========
+  const { mutate: createPaymentMethod, isPending } = useCreatePaymentMethod()
+  const { data: paymentMethods } = usePaymentMethods()
+
+  // ========== Modal and Form State ==========
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [formValue, setFormValue] = useState<FormValue>(initialValue)
   const formRef = useRef<FormInstance>(null)
 
+  // ========== Handle Modal Close ==========
   const handleClose = () => {
     setIsAddOpen(false)
     setFormValue(initialValue)
   }
 
+  // ========== Handle Form Submit ==========
   const handleFormSubmit = () => {
     const valid = formRef.current?.check()
     if (!valid) return
     setFormValue(initialValue)
+    createPaymentMethod({ ...formValue, balance: Number(formValue.balance) })
     setIsAddOpen(false)
   }
 
@@ -82,6 +78,7 @@ const Page = () => {
         </Button>
       </div>
       <Divider>Payment Method List</Divider>
+      {/* ========== Add Payment Method Modal ========== */}
       <Modal open={isAddOpen} onClose={handleClose} size="sm" backdrop="static">
         <Modal.Header closeButton={false} className="pl-2">
           <Modal.Title>Info</Modal.Title>
@@ -113,11 +110,11 @@ const Page = () => {
                 </Form.Group>
               </Form.Stack>
               <Form.Stack fluid className="mb-2">
-                <Form.Group controlId="openingBalance">
+                <Form.Group controlId="balance">
                   <Form.Label>Opening Balance</Form.Label>
                   <Form.Control
                     block
-                    name="openingBalance"
+                    name="balance"
                     accepter={NumberInput}
                     errorPlacement="bottomStart"
                   />
@@ -135,16 +132,23 @@ const Page = () => {
           >
             Cancel
           </Button>
-          <Button startIcon={<Icon as={IoMdAdd} />} appearance="primary" onClick={handleFormSubmit}>
+          <Button
+            disabled={isPending}
+            loading={isPending}
+            startIcon={<Icon as={IoMdAdd} />}
+            appearance="primary"
+            onClick={handleFormSubmit}
+          >
             Add
           </Button>
         </Modal.Footer>
       </Modal>
+      {/* ========== Payment Method Table ========== */}
       <Table
         autoHeight
         bordered
         cellBordered
-        data={data}
+        data={paymentMethods?.data}
         onRowClick={
           (/* rowData */) => {
             // console.log(rowData)
@@ -173,9 +177,10 @@ const Page = () => {
 
         <Column width={150}>
           <HeaderCell>Opening Balance</HeaderCell>
-          <Cell dataKey="openingBalance" />
+          <Cell dataKey="balance" />
         </Column>
 
+        {/* ========== Action Column with Popover Menu ========== */}
         <Column width={80} fixed="right" align="center">
           <HeaderCell>Action</HeaderCell>
 

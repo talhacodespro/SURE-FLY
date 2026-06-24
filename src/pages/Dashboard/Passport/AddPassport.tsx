@@ -1,6 +1,8 @@
+import { useCreatePassport } from '@/hooks/usePassport'
 import { Icon } from '@rsuite/icons'
 import { useState } from 'react'
 import { IoMdAdd } from 'react-icons/io'
+import { useNavigate } from 'react-router'
 import {
   Form,
   Button,
@@ -13,40 +15,56 @@ import {
   Textarea,
 } from 'rsuite'
 
-// Form model
+// ========== Form Validation Model ==========
 const PassportModel = Schema.Model({
-  name: StringType().isRequired('Passport name is required.'),
-  number: StringType().isRequired('Passport number is required.'),
-  dateOfBirth: DateType().isRequired('Date of birth is required.'),
-  expireDate: DateType().isRequired('Passport expire date is required.'),
-  mobile: StringType().isRequired('Mobile is required.'),
+  fullName: StringType().isRequired('Passport name is required.'),
+  passportNo: StringType().isRequired('Passport number is required.'),
+  dob: DateType().isRequired('Date of birth is required.'),
+  expiryDate: DateType().isRequired('Passport expire date is required.'),
+  phone: StringType().isRequired('Mobile is required.'),
   email: StringType()
     .isEmail('Please enter a valid email address.')
     .isRequired('Email is required.'),
-  remark: StringType(),
+  remarks: StringType(),
 })
 
-// Initial form value
+// ========== Initial Form Value ==========
 const initialValue = {
-  name: '',
-  number: '',
-  dateOfBirth: null as Date | null,
-  expireDate: null as Date | null,
-  mobile: '',
+  fullName: '',
+  passportNo: '',
+  dob: null as Date | null,
+  expiryDate: null as Date | null,
+  phone: '',
   email: '',
-  remark: '',
+  remarks: '',
 }
 
-// Type definition ⤵
+// ========== Form Value Type ==========
 type FormValue = typeof initialValue
 
+// ========== Add Passport Page Component ==========
 const Page = () => {
-  // Form value
+  // ========== Form Value State ==========
   const [formValue, setFormValue] = useState<FormValue>(initialValue)
+  const { mutate: createPassport, isPending } = useCreatePassport()
+  const navigate = useNavigate()
 
-  // Handle form submit
+  // ========== Handle Form Submit ==========
   const handleFormSubmit = () => {
-    setFormValue(initialValue)
+    const { dob, expiryDate, ...rest } = formValue
+    createPassport(
+      {
+        dob: dob?.toISOString() || null,
+        expiryDate: expiryDate?.toISOString() || null,
+        ...rest,
+      },
+      {
+        onSuccess: () => {
+          setFormValue(initialValue)
+          navigate('/list-passport')
+        },
+      },
+    )
   }
 
   return (
@@ -56,6 +74,7 @@ const Page = () => {
       </Heading>
       <Divider />
       <div>
+        {/* ========== Add Passport Form ========== */}
         <Form
           model={PassportModel}
           formValue={formValue}
@@ -64,22 +83,22 @@ const Page = () => {
         >
           <div className="grid grid-cols-1 gap-x-3 gap-y-4 md:grid-cols-2">
             <Form.Stack fluid>
-              <Form.Group controlId="name">
+              <Form.Group controlId="fullName">
                 <Form.Label>Passport Name</Form.Label>
-                <Form.Control name="name" errorPlacement="bottomEnd" />
+                <Form.Control name="fullName" errorPlacement="bottomEnd" />
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>
-              <Form.Group controlId="number">
+              <Form.Group controlId="passportNo">
                 <Form.Label>Passport Number</Form.Label>
-                <Form.Control name="number" type="tel" errorPlacement="bottomEnd" />
+                <Form.Control name="passportNo" type="tel" errorPlacement="bottomEnd" />
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>
-              <Form.Group controlId="dateOfBirth">
+              <Form.Group controlId="dob">
                 <Form.Label>Date of Birth</Form.Label>
                 <Form.Control
-                  name="dateOfBirth"
+                  name="dob"
                   accepter={DateInput}
                   format="dd/MMM/yyyy"
                   errorPlacement="bottomEnd"
@@ -87,10 +106,10 @@ const Page = () => {
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>
-              <Form.Group controlId="expireDate">
+              <Form.Group controlId="expiryDate">
                 <Form.Label>Expire Date</Form.Label>
                 <Form.Control
-                  name="expireDate"
+                  name="expiryDate"
                   accepter={DateInput}
                   format="dd/MMM/yyyy"
                   errorPlacement="bottomEnd"
@@ -98,9 +117,9 @@ const Page = () => {
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>
-              <Form.Group controlId="mobile">
-                <Form.Label>Mobile</Form.Label>
-                <Form.Control name="mobile" type="tel" errorPlacement="bottomEnd" />
+              <Form.Group controlId="phone">
+                <Form.Label>Phone</Form.Label>
+                <Form.Control name="phone" type="tel" errorPlacement="bottomEnd" />
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>
@@ -110,10 +129,10 @@ const Page = () => {
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid className="col-span-1 md:col-span-2">
-              <Form.Group controlId="remark">
-                <Form.Label>Remark</Form.Label>
+              <Form.Group controlId="remarks">
+                <Form.Label>Remarks</Form.Label>
                 <Form.Control
-                  name="remark"
+                  name="remarks"
                   placeholder="(optional)"
                   accepter={Textarea}
                   rows={1}
@@ -123,7 +142,13 @@ const Page = () => {
             </Form.Stack>
           </div>
           <Form.Group className="mt-5 flex justify-end">
-            <Button startIcon={<Icon as={IoMdAdd} />} appearance="primary" type="submit">
+            <Button
+              loading={isPending}
+              disabled={isPending}
+              startIcon={<Icon as={IoMdAdd} />}
+              appearance="primary"
+              type="submit"
+            >
               Add
             </Button>
           </Form.Group>

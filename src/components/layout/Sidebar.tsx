@@ -91,12 +91,8 @@ const sidebarItems = [
         path: '/fund-transfer',
       },
       {
-        label: 'All Transaction',
-        path: '/allTransaction',
-      },
-      {
-        label: 'NonBank Transaction',
-        path: '/nonBankTransaction',
+        label: 'All Transactions',
+        path: '/all-transactions',
       },
     ],
   },

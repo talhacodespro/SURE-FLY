@@ -20,6 +20,7 @@ import {
   AddExpense,
   ListExpense,
   ExpenseCategory,
+  ListTransactions,
 } from '@/pages'
 import { createBrowserRouter } from 'react-router'
 import RequireAuth from '@/guards/RequireAuth'
@@ -99,6 +100,10 @@ const router = createBrowserRouter([
       {
         path: '/list-expense',
         element: <ListExpense />,
+      },
+      {
+        path: '/all-transactions',
+        element: <ListTransactions />,
       },
       {
         path: '/expense-category',

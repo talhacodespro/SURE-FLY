@@ -7,7 +7,8 @@ import type { FormInstance } from 'rsuite'
 import { useNavigate } from 'react-router'
 import { useCreateCompany } from '@/hooks/useCompany'
 
-// Form model
+// ========== Form Validation Model ==========
+// Company add form er validation rules define kora hocche
 const FormModel = SchemaModel({
   name: StringType().isRequired('Name is required.'),
   phone: StringType().isRequired('Phone is required.'),
@@ -20,7 +21,7 @@ const FormModel = SchemaModel({
   remarks: StringType().isRequired('Remark is required.'),
 })
 
-// Initial form value
+// ========== Initial Form Value ==========
 const initialValue = {
   name: '',
   email: '',
@@ -31,25 +32,25 @@ const initialValue = {
   remarks: '',
 }
 
-// Type definition ⤵
+// ========== Form Value Type ==========
 type FormValue = typeof initialValue
 
+// ========== Add Company Page Component ==========
 const Page = () => {
-  const { mutate: createCompany, isPending } = useCreateCompany()
-  // Form value
-  const [formValue, setFormValue] = useState<FormValue>(initialValue)
-  const formRef = useRef<FormInstance>(null)
+  const { mutate: createCompany, isPending } = useCreateCompany() // Create company mutation hook
+  const [formValue, setFormValue] = useState<FormValue>(initialValue) // Form er current state
+  const formRef = useRef<FormInstance>(null) // Form er reference
   const navigate = useNavigate()
 
-  // Handle form submit
+  // ========== Handle Form Submit ==========
   const handleFormSubmit = async () => {
-    const valid = formRef.current?.check()
+    const valid = formRef.current?.check() // Form validity check
     if (!valid) return
 
     createCompany(formValue, {
       onSuccess: () => {
-        setFormValue(initialValue)
-        navigate('/list-company')
+        setFormValue(initialValue) // Form reset
+        navigate('/list-company') // Company list page e redirect
       },
     })
   }
@@ -61,6 +62,7 @@ const Page = () => {
       </Heading>
       <Divider />
       <div>
+        {/* ========== Company Add Form ========== */}
         <Form
           ref={formRef}
           model={FormModel}
@@ -69,42 +71,49 @@ const Page = () => {
           onSubmit={handleFormSubmit}
         >
           <div className="grid grid-cols-1 gap-x-3 gap-y-4 md:grid-cols-2">
+            {/* ========== Company Name Section ========== */}
             <Form.Stack fluid>
               <Form.Group controlId="name">
                 <Form.Label>Company Name</Form.Label>
                 <Form.Control name="name" errorPlacement="bottomEnd" />
               </Form.Group>
             </Form.Stack>
+            {/* ========== Company Phone Section ========== */}
             <Form.Stack fluid>
               <Form.Group controlId="phone">
                 <Form.Label>Company Phone</Form.Label>
                 <Form.Control name="phone" type="tel" errorPlacement="bottomEnd" />
               </Form.Group>
             </Form.Stack>
+            {/* ========== Contact Person Name Section ========== */}
             <Form.Stack fluid>
               <Form.Group controlId="contactName">
                 <Form.Label>Contact Person Name</Form.Label>
                 <Form.Control name="contactName" type="text" errorPlacement="bottomEnd" />
               </Form.Group>
             </Form.Stack>
+            {/* ========== Contact Person Phone Section ========== */}
             <Form.Stack fluid>
               <Form.Group controlId="contactPhone">
                 <Form.Label>Contact Person Phone</Form.Label>
                 <Form.Control name="contactPhone" type="tel" errorPlacement="bottomEnd" />
               </Form.Group>
             </Form.Stack>
+            {/* ========== Company Email Section ========== */}
             <Form.Stack fluid>
               <Form.Group controlId="email">
                 <Form.Label>Company Email</Form.Label>
                 <Form.Control name="email" type="email" errorPlacement="bottomEnd" />
               </Form.Group>
             </Form.Stack>
+            {/* ========== Company Address Section ========== */}
             <Form.Stack fluid>
               <Form.Group controlId="address" className="">
                 <Form.Label>Company Address</Form.Label>
                 <Form.Control name="address" accepter={Textarea} rows={1} />
               </Form.Group>
             </Form.Stack>
+            {/* ========== Remarks Section ========== */}
             <Form.Stack fluid className="col-span-1 md:col-span-2">
               <Form.Group controlId="remarks" className="md:col-span-2">
                 <Form.Label>Remarks</Form.Label>
@@ -112,6 +121,7 @@ const Page = () => {
               </Form.Group>
             </Form.Stack>
           </div>
+          {/* ========== Add Button ========== */}
           <Form.Group className="mt-5 flex justify-end">
             <Button
               disabled={isPending}

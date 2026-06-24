@@ -1,10 +1,11 @@
+import { useSearchCompanies } from '@/hooks/useCompany'
 import { Icon } from '@rsuite/icons'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { IoMdAdd } from 'react-icons/io'
 import { Form, Button, Heading, Divider, Textarea, SelectPicker, NumberInput } from 'rsuite'
 import { NumberType, SchemaModel, StringType } from 'rsuite/Schema'
 
-// Form model
+// ========== Form Validation Model ==========
 const FormModel = SchemaModel({
   company: StringType().isRequired('Company is required.'),
   dueAmount: NumberType().isRequired('Due amount is required.'),
@@ -16,7 +17,7 @@ const FormModel = SchemaModel({
   remarks: StringType().isRequired('Remark is required.'),
 })
 
-// Initial form value
+// ========== Initial Form Value ==========
 const initialValue = {
   company: '',
   dueAmount: 10,
@@ -26,17 +27,29 @@ const initialValue = {
   remarks: '',
 }
 
-// Type definition ⤵
+// ========== Form Value Type ==========
 type FormValue = typeof initialValue
 
+// ========== Receive Voucher Page Component ==========
 const Page = () => {
-  // Form value
+  // ========== Companies Query ==========
+  const { data: companiesRes } = useSearchCompanies()
+  console.log(`companiesRes`, companiesRes)
+  // ========== Form Value State ==========
   const [formValue, setFormValue] = useState<FormValue>(initialValue)
 
-  // Handle form submit
+  // ========== Handle Form Submit ==========
   const handleFormSubmit = () => {
     setFormValue(initialValue)
   }
+
+  // ========== Company Data ==========
+  const companyData = useMemo(() => {
+    return (companiesRes?.data || []).map((item) => ({
+      label: item.name,
+      value: String(item.id),
+    }))
+  }, [companiesRes])
 
   return (
     <div className="bg-background container mx-auto max-w-4xl rounded-md p-5">
@@ -45,6 +58,7 @@ const Page = () => {
       </Heading>
       <Divider />
       <div>
+        {/* ========== Receive Voucher Form ========== */}
         <Form
           model={FormModel}
           formValue={formValue}
@@ -55,12 +69,7 @@ const Page = () => {
             <Form.Stack fluid>
               <Form.Group controlId="company">
                 <Form.Label>Company</Form.Label>
-                <Form.Control
-                  block
-                  name="company"
-                  accepter={SelectPicker}
-                  data={[{ label: 'Company', value: 'Company' }]}
-                />
+                <Form.Control block name="company" accepter={SelectPicker} data={companyData} />
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>

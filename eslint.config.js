@@ -8,10 +8,10 @@ import prettier from 'eslint-plugin-prettier'
 import unusedImports from 'eslint-plugin-unused-imports'
 
 export default tseslint.config([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', '.agents']),
   {
     files: ['**/*.{ts,tsx}'],
-    ignores: ['dist', 'node_modules'],
+    ignores: ['dist', 'node_modules', '.agents'],
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,

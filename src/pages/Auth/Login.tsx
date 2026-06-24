@@ -15,6 +15,8 @@ import { useNavigate } from 'react-router'
 import { useLogin } from '@/hooks/useUser'
 import { useAuth } from '@/store/useAuth'
 
+// ========== Form Validation Model ==========
+// Login form er validation rule define kora hocche
 const model = Schema.Model({
   email: StringType().isEmail('Please enter a valid email.').isRequired('Email is required.'),
   password: StringType()
@@ -22,27 +24,32 @@ const model = Schema.Model({
     .addRule((value) => value.length >= 6, 'Password must be at least 6 characters.'),
 })
 
+// ========== Form Value Type ==========
 type FormValue = {
   email: string
   password: string
 }
 
+// ========== Login Page Component ==========
 const Page = () => {
   const navigate = useNavigate()
-  const isAuth = useAuth((state) => state.isAuth)
-  const loginMutation = useLogin()
-  const formRef = useRef<FormInstance>(null)
-  const [formValue, setFormValue] = useState<FormValue>({ email: '', password: '' })
+  const isAuth = useAuth((state) => state.isAuth) // Auth state check kora hocche
+  const loginMutation = useLogin() // Login API hook
+  const formRef = useRef<FormInstance>(null) // Form er reference
+  const [formValue, setFormValue] = useState<FormValue>({ email: '', password: '' }) // Form er current value
 
+  // ========== Redirect Authenticated User ==========
+  // Jodi user already login thake tahole home page e redirect kora hobe
   useEffect(() => {
     if (isAuth) {
       navigate('/', { replace: true })
     }
   }, [isAuth, navigate])
 
+  // ========== Handle Login Form Submit ==========
   const handleSubmit = () => {
-    const valid = formRef.current?.check()
-    if (!valid) return
+    const valid = formRef.current?.check() // Form validity check kora hocche
+    if (!valid) return // Jodi invalid hoy tahole submit kora hobe na
     loginMutation.mutate(formValue, {
       onSuccess: () => {
         toaster.push(
@@ -51,7 +58,7 @@ const Page = () => {
           </Message>,
           { placement: 'bottomEnd' },
         )
-        navigate('/')
+        navigate('/') // Login successful hole home page e jabe
       },
     })
   }
@@ -65,6 +72,7 @@ const Page = () => {
           </Heading>
 
           <Divider />
+          {/* ========== Login Form ========== */}
           <Form
             ref={formRef}
             model={model}
@@ -72,12 +80,14 @@ const Page = () => {
             onChange={(value) => setFormValue(value as FormValue)}
             onSubmit={handleSubmit}
           >
+            {/* ========== Email Input Section ========== */}
             <Form.Stack fluid>
               <Form.Group controlId="email">
                 <Form.Label>Email</Form.Label>
                 <Form.Control name="email" errorPlacement="bottomEnd" />
               </Form.Group>
             </Form.Stack>
+            {/* ========== Password Input Section ========== */}
             <Form.Stack fluid className="mt-4">
               <Form.Group controlId="password">
                 <Form.Label>Password</Form.Label>
@@ -89,6 +99,7 @@ const Page = () => {
                 />
               </Form.Group>
             </Form.Stack>
+            {/* ========== Login Button ========== */}
             <Form.Group className="mt-4">
               <Button block appearance="primary" type="submit" loading={loginMutation.isPending}>
                 Login

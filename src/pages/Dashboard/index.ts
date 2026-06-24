@@ -21,6 +21,7 @@ export { default as PaymentMethod } from './Account/PaymentMethod'
 
 // Cash Manager
 export { default as FundTransfer } from './CashManager/FundTransfer'
+export { default as ListTransactions } from './Transactions/ListTransactions'
 // export { default as AllTransaction } from './CashManager/AllTransaction'
 // export { default as NonBankTransaction } from './CashManager/NonBankTransaction'
 

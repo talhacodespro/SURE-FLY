@@ -4,7 +4,7 @@ import { IoMdAdd } from 'react-icons/io'
 import { Form, Button, Heading, Divider, Textarea, SelectPicker, NumberInput } from 'rsuite'
 import { NumberType, SchemaModel, StringType } from 'rsuite/Schema'
 
-// Form model
+// ========== Form Validation Model ==========
 const FormModel = SchemaModel({
   company: StringType().isRequired('Company is required.'),
   dueAmount: NumberType().isRequired('Due amount is required.'),
@@ -16,7 +16,7 @@ const FormModel = SchemaModel({
   remarks: StringType().isRequired('Remark is required.'),
 })
 
-// Initial form value
+// ========== Initial Form Value ==========
 const initialValue = {
   company: '',
   dueAmount: 10,
@@ -26,14 +26,15 @@ const initialValue = {
   remarks: '',
 }
 
-// Type definition ⤵
+// ========== Form Value Type ==========
 type FormValue = typeof initialValue
 
+// ========== Company Payment Page Component ==========
 const Page = () => {
-  // Form value
+  // ========== Form Value State ==========
   const [formValue, setFormValue] = useState<FormValue>(initialValue)
 
-  // Handle form submit
+  // ========== Handle Form Submit ==========
   const handleFormSubmit = () => {
     setFormValue(initialValue)
   }
@@ -45,6 +46,7 @@ const Page = () => {
       </Heading>
       <Divider />
       <div>
+        {/* ========== Company Payment Form ========== */}
         <Form
           model={FormModel}
           formValue={formValue}
