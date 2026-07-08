@@ -1,24 +1,19 @@
+import { useExpenseCategories } from '@/hooks/useExpenses'
+import { usePaymentMethods } from '@/hooks/useTransaction'
 import { Icon } from '@rsuite/icons'
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { IoMdAdd } from 'react-icons/io'
-import { Form, Button, Heading, Divider, Textarea, SelectPicker, NumberInput } from 'rsuite'
+import {
+  Form,
+  Button,
+  Heading,
+  Divider,
+  Textarea,
+  SelectPicker,
+  NumberInput,
+  type FormInstance,
+} from 'rsuite'
 import { NumberType, SchemaModel, StringType } from 'rsuite/Schema'
-
-// ========== Account Data ==========
-const ACCOUNTS = [
-  { label: 'Cash', value: 'Cash', balance: 100000 },
-  { label: 'Bank', value: 'Bank', balance: 50000 },
-  { label: 'Mobile Money', value: 'Mobile Money', balance: 20000 },
-]
-
-// ========== Category Data ==========
-const CATEGORIES = [
-  { label: 'Food', value: 'Food' },
-  { label: 'Transport', value: 'Transport' },
-  { label: 'Utilities', value: 'Utilities' },
-  { label: 'Rent', value: 'Rent' },
-  { label: 'Others', value: 'Others' },
-]
 
 // ========== Form Validation Model ==========
 const FormModel = SchemaModel({
@@ -45,11 +40,46 @@ type FormValue = typeof initialValues
 
 // ========== Add Expense Page Component ==========
 const Page = () => {
+  // ========== Hooks ==========
+  const formRef = useRef<FormInstance>(null)
+  const { data: paymentMethodsRes } = usePaymentMethods()
+  const { data: expenseCategories } = useExpenseCategories()
   // ========== Form Value State ==========
   const [formValue, setFormValue] = useState<FormValue>(initialValues)
 
+  const paymentMethodData = useMemo(() => {
+    return (paymentMethodsRes?.data || []).map((item) => ({
+      label: `${item.accountName} (${item.bankName})`,
+      value: String(item.id),
+    }))
+  }, [paymentMethodsRes])
+
+  const expenseCategoryData = useMemo(() => {
+    return (expenseCategories?.data || []).map((item) => ({
+      label: item.name,
+      value: String(item.id),
+    }))
+  }, [expenseCategories])
+
+  const selectedAccount = useMemo(() => {
+    return paymentMethodsRes?.data?.find((item) => item.id === Number(formValue.account))
+  }, [paymentMethodsRes, formValue.account])
+
+  const accountBalance = selectedAccount?.balance ?? 0
+
+  useEffect(() => {
+    setFormValue((prev) => ({
+      ...prev,
+      accountBalance,
+      amount: null,
+      confirmAmount: null,
+    }))
+  }, [accountBalance])
+
   // ========== Handle Form Submit ==========
   const handleFormSubmit = () => {
+    const valid = formRef.current?.check()
+    if (!valid) return
     setFormValue(initialValues)
   }
 
@@ -62,6 +92,7 @@ const Page = () => {
       <div>
         {/* ========== Add Expense Form ========== */}
         <Form
+          ref={formRef}
           model={FormModel}
           formValue={formValue}
           onChange={(value) => setFormValue(value as FormValue)}
@@ -75,7 +106,7 @@ const Page = () => {
                   block
                   name="account"
                   accepter={SelectPicker}
-                  data={ACCOUNTS}
+                  data={paymentMethodData}
                   searchable={false}
                   errorPlacement="bottomEnd"
                 />
@@ -86,9 +117,8 @@ const Page = () => {
                 <Form.Label>Account Balance</Form.Label>
                 <Form.Control
                   name="accountBalance"
-                  type="number"
                   readOnly
-                  value={ACCOUNTS.find((item) => item.value === formValue.account)?.balance || 0}
+                  value={accountBalance.toLocaleString()}
                 />
               </Form.Group>
             </Form.Stack>
@@ -98,7 +128,7 @@ const Page = () => {
                 <Form.Control
                   name="category"
                   accepter={SelectPicker}
-                  data={CATEGORIES}
+                  data={expenseCategoryData}
                   block
                   errorPlacement="bottomEnd"
                 />
@@ -111,15 +141,26 @@ const Page = () => {
                   name="amount"
                   accepter={NumberInput}
                   min={0}
-                  block
+                  max={accountBalance}
                   errorPlacement="bottomEnd"
+                  formatter={(value) =>
+                    value !== null && value !== undefined ? Number(value).toLocaleString() : ''
+                  }
                 />
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>
               <Form.Group controlId="confirmAmount">
                 <Form.Label>Confirm Amount</Form.Label>
-                <Form.Control block name="confirmAmount" accepter={NumberInput} min={0} />
+                <Form.Control
+                  block
+                  name="confirmAmount"
+                  accepter={NumberInput}
+                  min={0}
+                  formatter={(value) =>
+                    value !== null && value !== undefined ? Number(value).toLocaleString() : ''
+                  }
+                />
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>

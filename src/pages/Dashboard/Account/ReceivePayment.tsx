@@ -6,43 +6,43 @@ import { MdPayment } from 'react-icons/md'
 import { Form, Button, Heading, Divider, Textarea, SelectPicker, NumberInput } from 'rsuite'
 import { NumberType, SchemaModel, StringType } from 'rsuite/Schema'
 
+// ================= Validation =================
+
 const FormModel = SchemaModel({
   company: StringType().isRequired('Company is required.'),
-  accountBalance: NumberType().isRequired('Balance is required.'),
-  paymentAmount: NumberType()
-    .isRequired('Payment amount is required.')
-    .addRule((value, data) => {
-      if (value > data.accountBalance) {
-        return false
-      }
-      return true
-    }, 'Insufficient balance.'),
+
+  receiveAmount: NumberType().isRequired('Receive amount is required.'),
 
   confirmAmount: NumberType()
     .isRequired('Confirm amount is required.')
-    .equalTo('paymentAmount', "Amount doesn't match."),
+    .equalTo('receiveAmount', "Amount doesn't match."),
 
-  paymentMethod: StringType().isRequired('Payment method is required.'),
+  receiverAccount: StringType().isRequired('Receiver account is required.'),
 
   remarks: StringType().isRequired('Remark is required.'),
 })
 
+// ================= Initial Value =================
+
 const initialValue = {
   company: '',
-  payableAmount: 0,
-  accountBalance: 0,
-  paymentMethod: '',
-  paymentAmount: null as number | null,
+  dueAmount: 0,
+  receiveAmount: null as number | null,
   confirmAmount: null as number | null,
+  receiverAccount: '',
   remarks: '',
 }
 
 type FormValue = typeof initialValue
 
 const Page = () => {
+  // ================= Queries =================
+
   const { data: companiesRes, isLoading: companiesLoading } = useSearchCompanies()
 
-  const { data: paymentMethodsRes, isLoading: paymentMethodsLoading } = usePaymentMethods()
+  const { data: paymentMethodsRes } = usePaymentMethods()
+
+  // ================= State =================
 
   const [formValue, setFormValue] = useState<FormValue>(initialValue)
 
@@ -50,12 +50,7 @@ const Page = () => {
 
   const { data: companyBalanceRes } = useCompanyBalance(selectedCompanyId)
 
-  // ================= Selected Payment Method =================
-  const selectedPaymentMethod = useMemo(() => {
-    return paymentMethodsRes?.data?.find((item) => item.id === Number(formValue.paymentMethod))
-  }, [paymentMethodsRes, formValue.paymentMethod])
-
-  const accountBalance = selectedPaymentMethod?.balance ?? 0
+  // ================= Select Data =================
 
   const companyData = useMemo(() => {
     return (companiesRes?.data || []).map((item) => ({
@@ -71,24 +66,18 @@ const Page = () => {
     }))
   }, [paymentMethodsRes])
 
-  useEffect(() => {
-    setFormValue((prev) => {
-      if (
-        prev.payableAmount === (companyBalanceRes?.balance ?? 0) &&
-        prev.accountBalance === accountBalance
-      ) {
-        return prev
-      }
+  // ================= Update Due Amount =================
 
-      return {
-        ...prev,
-        payableAmount: companyBalanceRes?.balance ?? 0,
-        accountBalance: accountBalance,
-        paymentAmount: null,
-        confirmAmount: null,
-      }
-    })
-  }, [companyBalanceRes?.balance, accountBalance])
+  useEffect(() => {
+    setFormValue((prev) => ({
+      ...prev,
+      dueAmount: companyBalanceRes?.balance ?? 0,
+      receiveAmount: null,
+      confirmAmount: null,
+    }))
+  }, [companyBalanceRes?.balance])
+
+  // ================= Submit =================
 
   const handleFormSubmit = () => {
     console.log(formValue)
@@ -99,7 +88,7 @@ const Page = () => {
   return (
     <div className="bg-background container mx-auto max-w-4xl rounded-md p-5">
       <Heading level={4} className="text-center">
-        Company Payment
+        Receive Payment Info
       </Heading>
 
       <Divider />
@@ -125,24 +114,51 @@ const Page = () => {
               />
             </Form.Group>
           </Form.Stack>
+
           <Form.Stack fluid>
             <Form.Group>
-              <Form.Label>Payable Amount</Form.Label>
+              <Form.Label>Due Amount</Form.Label>
 
               <Form.Control
-                name="payableAmount"
+                name="dueAmount"
                 readOnly
-                value={formValue.payableAmount.toLocaleString()}
+                value={formValue.dueAmount.toLocaleString()}
               />
             </Form.Group>
           </Form.Stack>
+
           <Form.Stack fluid>
-            <Form.Group controlId="paymentMethod">
-              <Form.Label>Payment Method</Form.Label>
+            <Form.Group controlId="receiveAmount">
+              <Form.Label>Receive Amount</Form.Label>
 
               <Form.Control
-                name="paymentMethod"
-                loading={paymentMethodsLoading}
+                name="receiveAmount"
+                accepter={NumberInput}
+                min={0}
+                formatter={(value) => (value ? Number(value).toLocaleString() : '')}
+              />
+            </Form.Group>
+          </Form.Stack>
+
+          <Form.Stack fluid>
+            <Form.Group controlId="confirmAmount">
+              <Form.Label>Confirm Amount</Form.Label>
+
+              <Form.Control
+                name="confirmAmount"
+                accepter={NumberInput}
+                min={0}
+                formatter={(value) => (value ? Number(value).toLocaleString() : '')}
+              />
+            </Form.Group>
+          </Form.Stack>
+
+          <Form.Stack fluid>
+            <Form.Group controlId="receiverAccount">
+              <Form.Label>Receiver Account</Form.Label>
+
+              <Form.Control
+                name="receiverAccount"
                 accepter={SelectPicker}
                 data={paymentMethodData}
                 searchable={false}
@@ -152,56 +168,17 @@ const Page = () => {
           </Form.Stack>
 
           <Form.Stack fluid>
-            <Form.Group>
-              <Form.Label>Account Balance</Form.Label>
-
-              <Form.Control
-                name="accountBalance"
-                readOnly
-                value={accountBalance.toLocaleString()}
-              />
-            </Form.Group>
-          </Form.Stack>
-
-          <Form.Stack fluid>
-            <Form.Group controlId="paymentAmount">
-              <Form.Label>Payment Amount</Form.Label>
-
-              <Form.Control
-                name="paymentAmount"
-                accepter={NumberInput}
-                min={1}
-                max={formValue.accountBalance}
-                formatter={(value) => (value ? Number(value).toLocaleString() : '')}
-              />
-            </Form.Group>
-          </Form.Stack>
-          <Form.Stack fluid>
-            <Form.Group controlId="confirmAmount">
-              <Form.Label>Confirm Amount</Form.Label>
-
-              <Form.Control
-                name="confirmAmount"
-                accepter={NumberInput}
-                min={0}
-                formatter={(value) =>
-                  value !== null && value !== undefined ? Number(value).toLocaleString() : ''
-                }
-              />
-            </Form.Group>
-          </Form.Stack>
-          <Form.Stack fluid className="col-span-1 md:col-span-2">
             <Form.Group controlId="remarks">
               <Form.Label>Remarks</Form.Label>
 
-              <Form.Control name="remarks" accepter={Textarea} rows={1} cols={2} />
+              <Form.Control name="remarks" accepter={Textarea} rows={1} />
             </Form.Group>
           </Form.Stack>
         </div>
 
         <Form.Group className="mt-5 flex justify-end">
           <Button appearance="primary" type="submit" startIcon={<Icon as={MdPayment} />}>
-            Payment
+            Receive
           </Button>
         </Form.Group>
       </Form>

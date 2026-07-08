@@ -1,3 +1,4 @@
+import { useCreateExpenseCategory, useExpenseCategories } from '@/hooks/useExpenses'
 import { Icon, Trash } from '@rsuite/icons'
 import { useState, useRef } from 'react'
 import { CgMore } from 'react-icons/cg'
@@ -8,29 +9,15 @@ import { SchemaModel, StringType } from 'rsuite/Schema'
 
 const { Column, HeaderCell, Cell } = Table
 
-// ========== Mock Expense Category Data ==========
-const data = [
-  {
-    id: 1,
-    categoryName: 'Food',
-    remarks: 'Daily food expense',
-  },
-  {
-    id: 2,
-    categoryName: 'Transport',
-    remarks: 'Taxi, bus, etc.',
-  },
-]
-
 // ========== Form Validation Model ==========
 const FormModel = SchemaModel({
-  categoryName: StringType().isRequired('Category name is required.'),
+  name: StringType().isRequired('Category name is required.'),
   remarks: StringType().isRequired('Remark is required.'),
 })
 
 // ========== Initial Form Value ==========
 const initialValue = {
-  categoryName: '',
+  name: '',
   remarks: '',
 }
 
@@ -39,6 +26,9 @@ type FormValue = typeof initialValue
 
 // ========== Expense Category Page Component ==========
 const Page = () => {
+  const { data, isLoading } = useExpenseCategories(['remarks'])
+  const { mutate, isPending: isCreateLoading } = useCreateExpenseCategory()
+
   // ========== Modal and Form State ==========
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [formValue, setFormValue] = useState<FormValue>(initialValue)
@@ -54,8 +44,12 @@ const Page = () => {
   const handleFormSubmit = () => {
     const valid = formRef.current?.check()
     if (!valid) return
-    setFormValue(initialValue)
-    setIsAddOpen(false)
+    mutate(formValue, {
+      onSuccess: () => {
+        setIsAddOpen(false)
+        setFormValue(initialValue)
+      },
+    })
   }
 
   return (
@@ -85,9 +79,9 @@ const Page = () => {
           >
             <div className="flex flex-col gap-y-4">
               <Form.Stack fluid>
-                <Form.Group controlId="categoryName">
+                <Form.Group controlId="name">
                   <Form.Label>Category Name</Form.Label>
-                  <Form.Control block name="categoryName" errorPlacement="bottomEnd" />
+                  <Form.Control block name="name" errorPlacement="bottomEnd" />
                 </Form.Group>
               </Form.Stack>
               <Form.Stack fluid className="mb-2">
@@ -108,23 +102,20 @@ const Page = () => {
           >
             Cancel
           </Button>
-          <Button startIcon={<Icon as={IoMdAdd} />} appearance="primary" onClick={handleFormSubmit}>
+          <Button
+            loading={isCreateLoading}
+            disabled={isCreateLoading}
+            startIcon={<Icon as={IoMdAdd} />}
+            appearance="primary"
+            onClick={handleFormSubmit}
+          >
             Add
           </Button>
         </Modal.Footer>
       </Modal>
+
       {/* ========== Expense Category Table ========== */}
-      <Table
-        autoHeight
-        bordered
-        cellBordered
-        data={data}
-        onRowClick={
-          (/* rowData */) => {
-            // console.log(rowData)
-          }
-        }
-      >
+      <Table autoHeight bordered cellBordered data={data?.data || []} loading={isLoading}>
         <Column width={60} align="center" fixed>
           <HeaderCell>Id</HeaderCell>
           <Cell dataKey="id" />
@@ -132,7 +123,7 @@ const Page = () => {
 
         <Column flexGrow={1} minWidth={200}>
           <HeaderCell>Category Name</HeaderCell>
-          <Cell dataKey="categoryName" />
+          <Cell dataKey="name" />
         </Column>
 
         <Column flexGrow={1} minWidth={250}>

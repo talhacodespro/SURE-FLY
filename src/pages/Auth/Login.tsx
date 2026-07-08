@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   Button,
+  Checkbox,
   Divider,
   Form,
   Heading,
@@ -37,6 +38,7 @@ const Page = () => {
   const loginMutation = useLogin() // Login API hook
   const formRef = useRef<FormInstance>(null) // Form er reference
   const [formValue, setFormValue] = useState<FormValue>({ email: '', password: '' }) // Form er current value
+  const [rememberMe, setRememberMe] = useState(false) // Remember me checkbox er state
 
   // ========== Redirect Authenticated User ==========
   // Jodi user already login thake tahole home page e redirect kora hobe
@@ -48,19 +50,27 @@ const Page = () => {
 
   // ========== Handle Login Form Submit ==========
   const handleSubmit = () => {
-    const valid = formRef.current?.check() // Form validity check kora hocche
-    if (!valid) return // Jodi invalid hoy tahole submit kora hobe na
-    loginMutation.mutate(formValue, {
-      onSuccess: () => {
-        toaster.push(
-          <Message type="success" showIcon>
-            Logged in successfully
-          </Message>,
-          { placement: 'bottomEnd' },
-        )
-        navigate('/') // Login successful hole home page e jabe
+    const valid = formRef.current?.check()
+    if (!valid) return
+
+    loginMutation.mutate(
+      {
+        ...formValue,
+        rememberMe,
       },
-    })
+      {
+        onSuccess: () => {
+          toaster.push(
+            <Message type="success" showIcon>
+              Logged in successfully
+            </Message>,
+            { placement: 'bottomEnd' },
+          )
+
+          navigate('/')
+        },
+      },
+    )
   }
 
   return (
@@ -99,9 +109,23 @@ const Page = () => {
                 />
               </Form.Group>
             </Form.Stack>
+
+            {/* ========== Remember Me Section ========== */}
+            <Form.Group className="mt-4">
+              <Checkbox checked={rememberMe} onChange={(_, checked) => setRememberMe(checked)}>
+                Remember Me
+              </Checkbox>
+            </Form.Group>
+
             {/* ========== Login Button ========== */}
             <Form.Group className="mt-4">
-              <Button block appearance="primary" type="submit" loading={loginMutation.isPending}>
+              <Button
+                block
+                appearance="primary"
+                type="submit"
+                loading={loginMutation.isPending}
+                disabled={loginMutation.isPending}
+              >
                 Login
               </Button>
             </Form.Group>

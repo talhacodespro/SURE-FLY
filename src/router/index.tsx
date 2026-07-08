@@ -11,7 +11,6 @@ import {
   AddPassport,
   ListPassport,
   EditPassport,
-  ReceiveVoucher,
   CompanyPayment,
   PaymentMethod,
   Profile,
@@ -21,6 +20,7 @@ import {
   ListExpense,
   ExpenseCategory,
   ListTransactions,
+  ReceivePayment,
 } from '@/pages'
 import { createBrowserRouter } from 'react-router'
 import RequireAuth from '@/guards/RequireAuth'
@@ -78,8 +78,8 @@ const router = createBrowserRouter([
         element: <EditPassport />,
       },
       {
-        path: '/receive-voucher',
-        element: <ReceiveVoucher />,
+        path: '/receive-payment',
+        element: <ReceivePayment />,
       },
       {
         path: '/company-payment',

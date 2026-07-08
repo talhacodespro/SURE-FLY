@@ -15,7 +15,7 @@ export { default as ListPassport } from './Passport/ListPassport'
 export { default as EditPassport } from './Passport/EditPassport'
 
 // Account
-export { default as ReceiveVoucher } from './Account/ReceiveVoucher'
+export { default as ReceivePayment } from './Account/ReceivePayment'
 export { default as CompanyPayment } from './Account/CompanyPayment'
 export { default as PaymentMethod } from './Account/PaymentMethod'
 

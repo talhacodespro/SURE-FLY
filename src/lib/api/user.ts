@@ -16,10 +16,11 @@ export type User = {
 }
 
 export type CreateUserPayload = {
-  name: string
+  fullName: string
   email: string
-  mobile?: string
+  phone?: string
   password?: string
+  avatar?: string
   role?: string
   status?: string
   dob?: string | Date | null
@@ -73,7 +74,7 @@ export const updateUser = async (
   id: number | string,
   payload: UpdateUserPayload,
 ): Promise<User> => {
-  const res: AxiosResponse<User> = await api.put(`/users/${id}`, payload)
+  const res: AxiosResponse<User> = await api.patch(`/users/${id}`, payload)
   return res.data
 }
 

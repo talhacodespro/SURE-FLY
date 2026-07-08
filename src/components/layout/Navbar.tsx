@@ -8,6 +8,7 @@ import { Avatar, Center, IconButton, Menu, Popover, Whisper } from 'rsuite'
 import { useTheme } from '@/store/useTheme'
 import { useNavigate } from 'react-router'
 import { useAuth } from '@/store/useAuth'
+import { useMe } from '@/hooks/useUser'
 
 // ---------------
 // TYPES
@@ -47,6 +48,9 @@ MenuPopover.displayName = 'MenuPopover'
 const Navbar = () => {
   const { theme, setTheme } = useTheme() // Theme state
   const { sidebar, setSidebar } = useSidebar() // Sidebar toggle state
+  const { data: meRes } = useMe()
+  const avatar = meRes?.data?.avatar || ''
+  const fullName = meRes?.data?.fullName || ''
   const logout = useAuth((state) => state.logout)
   const navigate = useNavigate()
 
@@ -98,7 +102,9 @@ const Navbar = () => {
           }
         >
           <Center>
-            <Avatar src="https://picsum.photos/200" size="sm" />
+            <Avatar src={avatar} size="sm">
+              {fullName?.charAt(0) || 'S'}
+            </Avatar>
           </Center>
         </Whisper>
       </div>

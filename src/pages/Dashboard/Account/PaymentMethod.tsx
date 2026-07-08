@@ -117,6 +117,9 @@ const Page = () => {
                     name="balance"
                     accepter={NumberInput}
                     errorPlacement="bottomStart"
+                    formatter={(value) =>
+                      value !== null && value !== undefined ? Number(value).toLocaleString() : ''
+                    }
                   />
                 </Form.Group>
               </Form.Stack>
@@ -176,8 +179,8 @@ const Page = () => {
         </Column>
 
         <Column width={150}>
-          <HeaderCell>Opening Balance</HeaderCell>
-          <Cell dataKey="balance" />
+          <HeaderCell>Balance</HeaderCell>
+          <Cell>{(rowData) => Number(rowData.balance || 0).toLocaleString()}</Cell>
         </Column>
 
         {/* ========== Action Column with Popover Menu ========== */}

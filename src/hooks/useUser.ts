@@ -62,11 +62,11 @@ export const useDeleteUser = () => {
 
 export const useLogin = () => {
   const qc = useQueryClient()
-  return useMutation<AuthResponse, Error, LoginPayload>({
+  return useMutation<AuthResponse, Error, LoginPayload & { rememberMe?: boolean }>({
     mutationKey: ['auth', 'login'],
-    mutationFn: login,
-    onSuccess: (res) => {
-      useAuth.getState().login(res.data.token)
+    mutationFn: ({ email, password }) => login({ email, password }),
+    onSuccess: (res, variables) => {
+      useAuth.getState().login(res.data.token, variables.rememberMe)
       qc.invalidateQueries({ queryKey: ['auth', 'me'] })
     },
   })

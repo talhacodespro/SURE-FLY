@@ -1,24 +1,33 @@
+import { usePaymentMethods } from '@/hooks/useTransaction'
 import { Icon } from '@rsuite/icons'
-import { useState } from 'react'
-import { IoMdAdd } from 'react-icons/io'
+import { useEffect, useMemo, useState } from 'react'
+import { BiTransferAlt } from 'react-icons/bi'
 import { Form, Button, Heading, Divider, Textarea, SelectPicker, NumberInput } from 'rsuite'
 import { NumberType, SchemaModel, StringType } from 'rsuite/Schema'
 
 // ========== Form Validation Model ==========
 const FormModel = SchemaModel({
-  fromAccount: StringType().isRequired('From Account is required.'),
-  toAccount: StringType().isRequired('To Account is required.'),
+  fromAccount: StringType().isRequired('From account is required.'),
+
+  toAccount: StringType()
+    .isRequired('To account is required.')
+    .addRule(
+      (value, data) => value !== data.fromAccount,
+      'From and To account cannot be the same.',
+    ),
+
   transferAmount: NumberType()
     .isRequired('Transfer amount is required.')
     .addRule((value, data) => {
-      if (data.fromAccountBalance && value > data.fromAccountBalance) {
-        return false
-      }
-      return true
-    }, 'Insufficient balance.'),
+      if (value == null) return false
+
+      return value <= data.fromAccountBalance
+    }, 'Transfer amount cannot be greater than account balance.'),
+
   confirmAmount: NumberType()
     .isRequired('Confirm amount is required.')
     .equalTo('transferAmount', "Amount doesn't match."),
+
   remarks: StringType().isRequired('Remark is required.'),
 })
 
@@ -36,34 +45,42 @@ const initialValue = {
 // ========== Form Value Type ==========
 type FormValue = typeof initialValue
 
-// ========== Mock Account List Data ==========
-const accountList = [
-  { label: 'Cash Account', value: 'cash', balance: 50000 },
-  { label: 'Bank Asia', value: 'bank_asia', balance: 120000 },
-  { label: 'Islami Bank', value: 'islami_bank', balance: 85000 },
-  { label: 'Bkash Agent', value: 'bkash', balance: 25000 },
-]
-
 // ========== Fund Transfer Page Component ==========
 const Page = () => {
   // ========== Form Value State ==========
   const [formValue, setFormValue] = useState<FormValue>(initialValue)
 
+  // =========== Hooks ==========
+  const { data: paymentMethodsRes, isLoading } = usePaymentMethods()
+
+  const paymentMethodData = useMemo(() => {
+    return (paymentMethodsRes?.data || []).map((item) => ({
+      label: `${item.accountName} (${item.bankName})`,
+      value: String(item.id),
+    }))
+  }, [paymentMethodsRes])
+
+  const fromAccount = useMemo(() => {
+    return paymentMethodsRes?.data?.find((item) => item.id === Number(formValue.fromAccount))
+  }, [paymentMethodsRes, formValue.fromAccount])
+
+  const toAccount = useMemo(() => {
+    return paymentMethodsRes?.data?.find((item) => item.id === Number(formValue.toAccount))
+  }, [paymentMethodsRes, formValue.toAccount])
+
+  useEffect(() => {
+    setFormValue((prev) => ({
+      ...prev,
+      fromAccountBalance: fromAccount?.balance ?? 0,
+      toAccountBalance: toAccount?.balance ?? 0,
+      transferAmount: null,
+      confirmAmount: null,
+    }))
+  }, [fromAccount?.balance, toAccount?.balance])
+
   // ========== Handle Form Change ==========
   const handleFormChange = (value: FormValue) => {
     const updatedValue = { ...value }
-
-    // Update From Account Balance if account changes
-    if (value.fromAccount !== formValue.fromAccount) {
-      const account = accountList.find((item) => item.value === value.fromAccount)
-      updatedValue.fromAccountBalance = account ? account.balance : 0
-    }
-
-    // Update To Account Balance if account changes
-    if (value.toAccount !== formValue.toAccount) {
-      const account = accountList.find((item) => item.value === value.toAccount)
-      updatedValue.toAccountBalance = account ? account.balance : 0
-    }
 
     setFormValue(updatedValue)
   }
@@ -95,7 +112,8 @@ const Page = () => {
                   block
                   name="fromAccount"
                   accepter={SelectPicker}
-                  data={accountList}
+                  data={paymentMethodData}
+                  loading={isLoading}
                   searchable={false}
                 />
               </Form.Group>
@@ -107,34 +125,58 @@ const Page = () => {
                   block
                   name="toAccount"
                   accepter={SelectPicker}
-                  data={accountList}
+                  data={paymentMethodData}
+                  loading={isLoading}
                   searchable={false}
                 />
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>
               <Form.Group controlId="fromAccountBalance">
-                <Form.Label>Account Balance</Form.Label>
-                <Form.Control name="fromAccountBalance" type="number" readOnly />
+                <Form.Label>From Account Balance</Form.Label>
+                <Form.Control
+                  name="fromAccountBalance"
+                  readOnly
+                  value={formValue.fromAccountBalance.toLocaleString()}
+                />
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>
               <Form.Group controlId="toAccountBalance">
-                <Form.Label>Account Balance</Form.Label>
-                <Form.Control name="toAccountBalance" type="number" readOnly />
+                <Form.Label>To Account Balance</Form.Label>
+                <Form.Control
+                  name="toAccountBalance"
+                  readOnly
+                  value={formValue.toAccountBalance.toLocaleString()}
+                />
               </Form.Group>
             </Form.Stack>
 
             <Form.Stack fluid>
               <Form.Group controlId="transferAmount">
                 <Form.Label>Transfer Amount</Form.Label>
-                <Form.Control name="transferAmount" accepter={NumberInput} min={0} />
+                <Form.Control
+                  name="transferAmount"
+                  accepter={NumberInput}
+                  min={0}
+                  max={formValue.fromAccountBalance}
+                  formatter={(value) =>
+                    value !== null && value !== undefined ? Number(value).toLocaleString() : ''
+                  }
+                />
               </Form.Group>
             </Form.Stack>
             <Form.Stack fluid>
               <Form.Group controlId="confirmAmount">
                 <Form.Label>Confirm Amount</Form.Label>
-                <Form.Control name="confirmAmount" accepter={NumberInput} min={0} />
+                <Form.Control
+                  name="confirmAmount"
+                  accepter={NumberInput}
+                  min={0}
+                  formatter={(value) =>
+                    value !== null && value !== undefined ? Number(value).toLocaleString() : ''
+                  }
+                />
               </Form.Group>
             </Form.Stack>
 
@@ -146,8 +188,8 @@ const Page = () => {
             </Form.Stack>
           </div>
           <Form.Group className="mt-5 flex justify-end">
-            <Button startIcon={<Icon as={IoMdAdd} />} appearance="primary" type="submit">
-              Add
+            <Button startIcon={<Icon as={BiTransferAlt} />} appearance="primary" type="submit">
+              Transfer
             </Button>
           </Form.Group>
         </Form>

@@ -68,8 +68,8 @@ const sidebarItems = [
     icon: MdAccountBalanceWallet,
     children: [
       {
-        label: 'Receive Voucher',
-        path: '/receive-voucher',
+        label: 'Receive Payment',
+        path: '/receive-payment',
       },
       {
         label: 'Company Payment',
