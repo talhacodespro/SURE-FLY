@@ -1,8 +1,17 @@
-import { usePaymentMethods } from '@/hooks/useTransaction'
+import { useFundTransfer, usePaymentMethods } from '@/hooks/useTransaction'
 import { Icon } from '@rsuite/icons'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { BiTransferAlt } from 'react-icons/bi'
-import { Form, Button, Heading, Divider, Textarea, SelectPicker, NumberInput } from 'rsuite'
+import {
+  Form,
+  Button,
+  Heading,
+  Divider,
+  Textarea,
+  SelectPicker,
+  NumberInput,
+  type FormInstance,
+} from 'rsuite'
 import { NumberType, SchemaModel, StringType } from 'rsuite/Schema'
 
 // ========== Form Validation Model ==========
@@ -28,7 +37,7 @@ const FormModel = SchemaModel({
     .isRequired('Confirm amount is required.')
     .equalTo('transferAmount', "Amount doesn't match."),
 
-  remarks: StringType().isRequired('Remark is required.'),
+  remarks: StringType(),
 })
 
 // ========== Initial Form Value ==========
@@ -47,6 +56,12 @@ type FormValue = typeof initialValue
 
 // ========== Fund Transfer Page Component ==========
 const Page = () => {
+  // ========== Fund Transfer Mutation ==========
+  const { mutateAsync: fundTransferMutate, isPending } = useFundTransfer()
+
+  // ========== Form Ref ==========
+  const formRef = useRef<FormInstance>(null)
+
   // ========== Form Value State ==========
   const [formValue, setFormValue] = useState<FormValue>(initialValue)
 
@@ -87,7 +102,20 @@ const Page = () => {
 
   // ========== Handle Form Submit ==========
   const handleFormSubmit = () => {
-    setFormValue(initialValue)
+    if (!formRef.current?.check()) return
+
+    const payload = {
+      fromAccountId: Number(formValue.fromAccount),
+      toAccountId: Number(formValue.toAccount),
+      amount: Number(formValue.transferAmount),
+      remarks: formValue.remarks.trim(),
+    }
+
+    fundTransferMutate(payload, {
+      onSuccess: () => {
+        setFormValue(initialValue)
+      },
+    })
   }
 
   return (
@@ -102,6 +130,7 @@ const Page = () => {
           model={FormModel}
           formValue={formValue}
           onChange={(value) => handleFormChange(value as FormValue)}
+          ref={formRef}
           onSubmit={handleFormSubmit}
         >
           <div className="grid grid-cols-1 gap-x-3 gap-y-4 md:grid-cols-2">
@@ -158,7 +187,7 @@ const Page = () => {
                 <Form.Control
                   name="transferAmount"
                   accepter={NumberInput}
-                  min={0}
+                  min={1}
                   max={formValue.fromAccountBalance}
                   formatter={(value) =>
                     value !== null && value !== undefined ? Number(value).toLocaleString() : ''
@@ -183,12 +212,23 @@ const Page = () => {
             <Form.Stack fluid className="md:col-span-2">
               <Form.Group controlId="remarks">
                 <Form.Label>Remarks</Form.Label>
-                <Form.Control name="remarks" accepter={Textarea} rows={1} />
+                <Form.Control
+                  placeholder="(optional)"
+                  name="remarks"
+                  accepter={Textarea}
+                  rows={1}
+                />
               </Form.Group>
             </Form.Stack>
           </div>
           <Form.Group className="mt-5 flex justify-end">
-            <Button startIcon={<Icon as={BiTransferAlt} />} appearance="primary" type="submit">
+            <Button
+              loading={isPending}
+              disabled={isPending}
+              startIcon={<Icon as={BiTransferAlt} />}
+              appearance="primary"
+              type="submit"
+            >
               Transfer
             </Button>
           </Form.Group>

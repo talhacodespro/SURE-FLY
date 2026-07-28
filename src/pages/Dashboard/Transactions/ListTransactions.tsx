@@ -15,8 +15,8 @@ const typeColorMap: Record<string, string> = {
 
 // ========== Direction Color Mapping ==========
 const directionColorMap: Record<string, string> = {
-  DEBIT: 'green',
-  CREDIT: 'red',
+  DEBIT: 'red',
+  CREDIT: 'green',
 }
 
 // ========== List Transactions Page Component ==========
@@ -24,7 +24,7 @@ const Page = () => {
   // ========== Hook for Fetching Transactions ==========
   const { data: transactionsRes, isLoading, isFetching } = useTransactions()
   const transactionsData = transactionsRes?.data || []
-
+  console.log(transactionsRes)
   return (
     <div className="p-2">
       <Divider>List Transactions</Divider>
@@ -72,9 +72,20 @@ const Page = () => {
           </Cell>
         </Column>
 
-        <Column flexGrow={1} minWidth={200}>
+        {/* <Column flexGrow={1} minWidth={200}>
           <HeaderCell>Company</HeaderCell>
           <Cell>{(rowData) => rowData.company?.name || 'N/A'}</Cell>
+        </Column> */}
+
+        <Column flexGrow={1} minWidth={200}>
+          <HeaderCell>Payment Method</HeaderCell>
+          <Cell>
+            {(rowData) =>
+              rowData.paymentMethod
+                ? `${rowData.paymentMethod.accountName} (${rowData.paymentMethod.bankName})`
+                : 'N/A'
+            }
+          </Cell>
         </Column>
 
         <Column width={160}>

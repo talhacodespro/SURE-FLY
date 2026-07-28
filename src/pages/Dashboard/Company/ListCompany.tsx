@@ -109,6 +109,13 @@ const Page = () => {
     })
   }
 
+  const balanceColor =
+    Number(balanceData?.balance || 0) < 0
+      ? '!text-red-400'
+      : Number(balanceData?.balance || 0) > 0
+        ? '!text-green-400'
+        : ''
+
   return (
     <>
       {/* ========== Filter Section ========== */}
@@ -150,7 +157,7 @@ const Page = () => {
 
         <Column flexGrow={1} minWidth={250}>
           <HeaderCell>Remarks</HeaderCell>
-          <Cell dataKey="remarks" />
+          <Cell>{(rowData) => rowData.remarks || 'N/A'}</Cell>
         </Column>
 
         <Column width={80} fixed="right" align="center">
@@ -170,7 +177,10 @@ const Page = () => {
                             {/* View Button */}
                             <IconButton
                               onClick={() => {
-                                handleView(rowData as Company)
+                                handleView({
+                                  ...(rowData as Company),
+                                  remarks: rowData.remarks?.trim() || 'N/A',
+                                })
                                 onClose?.()
                               }}
                               icon={<Icon as={GrView} />}
@@ -315,11 +325,7 @@ const Page = () => {
               <Stat.Label className="!text-blue-400" uppercase>
                 balance
               </Stat.Label>
-              <Stat.Value
-                className={
-                  Number(balanceData?.balance || 0) < 0 ? '!text-red-400' : '!text-green-400'
-                }
-              >
+              <Stat.Value className={`${balanceColor}`}>
                 {balanceLoading ? '...' : Number(balanceData?.balance || 0).toLocaleString()}
               </Stat.Value>
             </Stat>

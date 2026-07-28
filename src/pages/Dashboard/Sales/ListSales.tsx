@@ -104,7 +104,7 @@ const Page = () => {
 
         <Column width={120}>
           <HeaderCell>Amount</HeaderCell>
-          <Cell dataKey="companyAmount" />
+          <Cell>{(rowData) => rowData.companyAmount?.toLocaleString() || 'N/A'}</Cell>
         </Column>
 
         <Column width={180}>
@@ -116,7 +116,7 @@ const Page = () => {
 
         <Column flexGrow={1} minWidth={150}>
           <HeaderCell>Remarks</HeaderCell>
-          <Cell dataKey="remarks" />
+          <Cell>{(rowData) => rowData.remarks || 'N/A'}</Cell>
         </Column>
 
         {/* ========== Action Column with Popover Menu ========== */}

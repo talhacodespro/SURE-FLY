@@ -1,4 +1,4 @@
-import { useExpenseCategories } from '@/hooks/useExpenses'
+import { useCreateExpense, useExpenseCategories } from '@/hooks/useExpenses'
 import { usePaymentMethods } from '@/hooks/useTransaction'
 import { Icon } from '@rsuite/icons'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -23,7 +23,7 @@ const FormModel = SchemaModel({
   confirmAmount: NumberType()
     .isRequired('Please confirm the amount.')
     .equalTo('amount', 'Amounts do not match.'),
-  remarks: StringType().isRequired('Remark is required.'),
+  remarks: StringType(),
 })
 
 // ========== Initial Form Value ==========
@@ -40,6 +40,7 @@ type FormValue = typeof initialValues
 
 // ========== Add Expense Page Component ==========
 const Page = () => {
+  const { mutate: createExpense, isPending } = useCreateExpense()
   // ========== Hooks ==========
   const formRef = useRef<FormInstance>(null)
   const { data: paymentMethodsRes } = usePaymentMethods()
@@ -80,7 +81,19 @@ const Page = () => {
   const handleFormSubmit = () => {
     const valid = formRef.current?.check()
     if (!valid) return
-    setFormValue(initialValues)
+
+    const payload = {
+      paymentMethodId: Number(formValue.account),
+      categoryId: Number(formValue.category),
+      amount: Number(formValue.amount),
+      remarks: formValue.remarks.trim(),
+    }
+
+    createExpense(payload, {
+      onSuccess: () => {
+        setFormValue(initialValues)
+      },
+    })
   }
 
   return (
@@ -166,12 +179,23 @@ const Page = () => {
             <Form.Stack fluid>
               <Form.Group controlId="remarks">
                 <Form.Label>Remarks</Form.Label>
-                <Form.Control name="remarks" accepter={Textarea} rows={1} />
+                <Form.Control
+                  placeholder="(optional)"
+                  name="remarks"
+                  accepter={Textarea}
+                  rows={1}
+                />
               </Form.Group>
             </Form.Stack>
           </div>
           <Form.Group className="mt-5 flex justify-end">
-            <Button startIcon={<Icon as={IoMdAdd} />} appearance="primary" type="submit">
+            <Button
+              disabled={isPending}
+              loading={isPending}
+              startIcon={<Icon as={IoMdAdd} />}
+              appearance="primary"
+              type="submit"
+            >
               Add
             </Button>
           </Form.Group>

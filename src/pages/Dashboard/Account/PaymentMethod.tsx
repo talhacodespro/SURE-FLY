@@ -43,7 +43,7 @@ type FormValue = typeof initialValue
 const Page = () => {
   // ========== Hooks ==========
   const { mutate: createPaymentMethod, isPending } = useCreatePaymentMethod()
-  const { data: paymentMethods } = usePaymentMethods()
+  const { data: paymentMethods, isLoading } = usePaymentMethods()
 
   // ========== Modal and Form State ==========
   const [isAddOpen, setIsAddOpen] = useState(false)
@@ -151,7 +151,8 @@ const Page = () => {
         autoHeight
         bordered
         cellBordered
-        data={paymentMethods?.data}
+        data={paymentMethods?.data || []}
+        loading={isLoading}
         onRowClick={
           (/* rowData */) => {
             // console.log(rowData)

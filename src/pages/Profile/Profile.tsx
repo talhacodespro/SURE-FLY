@@ -23,6 +23,7 @@ import {
   Popover,
   PasswordInput,
 } from 'rsuite'
+
 import { Link } from 'react-router'
 import { Icon } from '@rsuite/icons'
 import {
@@ -96,6 +97,7 @@ const initialPasswordValue = {
 
 const Page = () => {
   const { data: meRes } = useMe()
+  const user = meRes?.data
   // const { data: usersRes, isLoading: isUsersLoading } = useUsers()
 
   const updateUserMutation = useUpdateUser()
@@ -139,8 +141,6 @@ const Page = () => {
   })
 
   useEffect(() => {
-    const user = meRes?.data
-
     if (!user) return
 
     setFormValue({
@@ -151,7 +151,7 @@ const Page = () => {
       avatar: user.avatar || '',
       dob: user.dob ? new Date(user.dob) : null,
     })
-  }, [meRes])
+  }, [meRes, user])
 
   const profileModel = useMemo(() => {
     return Schema.Model({
@@ -557,6 +557,8 @@ const Page = () => {
                     accept="image/*"
                     autoUpload={false}
                     action="#"
+                    width={500}
+                    height={500}
                     onChange={async (fileList) => {
                       const latestFile = fileList[fileList.length - 1]
 
@@ -595,7 +597,8 @@ const Page = () => {
                   >
                     <button
                       type="button"
-                      className="flex h-[150px] w-[150px] cursor-pointer items-center justify-center overflow-hidden rounded-md border border-dashed bg-transparent"
+                      style={{ width: '160px', height: '160px' }}
+                      className="flex cursor-pointer items-center justify-center overflow-hidden rounded-md border border-dashed bg-transparent"
                     >
                       {fileInfo || formValue.avatar ? (
                         <img
@@ -706,158 +709,159 @@ const Page = () => {
         </Modal.Footer>
       </Modal>
 
-      <Panel
-        header={
-          <div className="flex items-center justify-between">
-            <Heading level={4}>User Role</Heading>
+      {user?.role === 'ADMIN' && (
+        <Panel
+          header={
+            <div className="flex items-center justify-between">
+              <Heading level={4}>User Role</Heading>
 
-            <Button
-              startIcon={<Icon as={IoMdAdd} />}
-              appearance="primary"
-              onClick={() => setCreateUserOpen(true)}
-            >
-              Create User
-            </Button>
-          </div>
-        }
-        bordered
-        className="mt-5"
-      >
-        <Table autoHeight data={[]} rowKey="id">
-          <Column flexGrow={1} fixed>
-            <HeaderCell>Name</HeaderCell>
-            <Cell dataKey="fullName" />
-          </Column>
+              <Button
+                startIcon={<Icon as={IoMdAdd} />}
+                appearance="primary"
+                onClick={() => setCreateUserOpen(true)}
+              >
+                Create User
+              </Button>
+            </div>
+          }
+          bordered
+          className="mt-5"
+        >
+          <Table autoHeight data={[]} rowKey="id">
+            <Column flexGrow={1} fixed>
+              <HeaderCell>Name</HeaderCell>
+              <Cell dataKey="fullName" />
+            </Column>
 
-          <Column flexGrow={1}>
-            <HeaderCell>Email</HeaderCell>
-            <Cell dataKey="email" />
-          </Column>
+            <Column flexGrow={1}>
+              <HeaderCell>Email</HeaderCell>
+              <Cell dataKey="email" />
+            </Column>
 
-          <Column width={120}>
-            <HeaderCell>Mobile</HeaderCell>
-            <Cell dataKey="phone" />
-          </Column>
+            <Column width={120}>
+              <HeaderCell>Mobile</HeaderCell>
+              <Cell dataKey="phone" />
+            </Column>
 
-          <Column width={120}>
-            <HeaderCell>Date of Birth</HeaderCell>
-            <Cell>
-              {(rowData: User) => (
-                <span>{rowData.dob ? new Date(rowData.dob).toLocaleDateString() : '-'}</span>
-              )}
-            </Cell>
-          </Column>
+            <Column width={120}>
+              <HeaderCell>Date of Birth</HeaderCell>
+              <Cell>
+                {(rowData: User) => (
+                  <span>{rowData.dob ? new Date(rowData.dob).toLocaleDateString() : '-'}</span>
+                )}
+              </Cell>
+            </Column>
 
-          <Column flexGrow={2}>
-            <HeaderCell>Address</HeaderCell>
-            <Cell dataKey="address" />
-          </Column>
+            <Column flexGrow={2}>
+              <HeaderCell>Address</HeaderCell>
+              <Cell dataKey="address" />
+            </Column>
 
-          <Column width={100}>
-            <HeaderCell>Role</HeaderCell>
-            <Cell>
-              {(rowData: User) => (
-                <Tag color={rowData.role === 'ADMIN' ? 'blue' : 'green'}>{rowData.role}</Tag>
-              )}
-            </Cell>
-          </Column>
+            <Column width={100}>
+              <HeaderCell>Role</HeaderCell>
+              <Cell>
+                {(rowData: User) => (
+                  <Tag color={rowData.role === 'ADMIN' ? 'blue' : 'green'}>{rowData.role}</Tag>
+                )}
+              </Cell>
+            </Column>
 
-          <Column width={100}>
-            <HeaderCell>Status</HeaderCell>
-            <Cell>
-              {(rowData: User) => (
-                <Tag color={rowData.isActive ? 'green' : 'red'}>
-                  {rowData.isActive ? 'Active' : 'Inactive'}
-                </Tag>
-              )}
-            </Cell>
-          </Column>
+            <Column width={100}>
+              <HeaderCell>Status</HeaderCell>
+              <Cell>
+                {(rowData: User) => (
+                  <Tag color={rowData.isActive ? 'green' : 'red'}>
+                    {rowData.isActive ? 'Active' : 'Inactive'}
+                  </Tag>
+                )}
+              </Cell>
+            </Column>
 
-          <Column width={100} align="center">
-            <HeaderCell>Action</HeaderCell>
+            <Column width={100} align="center">
+              <HeaderCell>Action</HeaderCell>
 
-            <Cell>
-              {(rowData: User) => (
-                <Whisper
-                  placement="bottomEnd"
-                  trigger="click"
-                  speaker={({ className, onClose, ...props }, ref) => {
-                    return (
-                      <Popover ref={ref} full {...props} className={`${className} shadow-md`}>
-                        <div className="px-2 pt-2 pb-2">
-                          <div className="flex flex-col items-start gap-y-2">
-                            <IconButton
-                              onClick={() => {
-                                handleEditUserClick(rowData)
-                                onClose?.()
-                              }}
-                              icon={<Icon as={FaUserEdit} />}
-                              color="blue"
-                              size="sm"
-                              appearance="primary"
-                            >
-                              Edit
-                            </IconButton>
+              <Cell>
+                {(rowData: User) => (
+                  <Whisper
+                    placement="bottomEnd"
+                    trigger="click"
+                    speaker={({ className, onClose, ...props }, ref) => {
+                      return (
+                        <Popover ref={ref} full {...props} className={`${className} shadow-md`}>
+                          <div className="px-2 pt-2 pb-2">
+                            <div className="flex flex-col items-start gap-y-2">
+                              <IconButton
+                                onClick={() => {
+                                  handleEditUserClick(rowData)
+                                  onClose?.()
+                                }}
+                                icon={<Icon as={FaUserEdit} />}
+                                color="blue"
+                                size="sm"
+                                appearance="primary"
+                              >
+                                Edit
+                              </IconButton>
 
-                            <IconButton
-                              onClick={() => {
-                                // handleToggleStatus(rowData)
-                                onClose?.()
-                              }}
-                              icon={
-                                <Icon
-                                  as={rowData.isActive ? IoMdRemoveCircle : IoMdCheckmarkCircle}
-                                />
-                              }
-                              color={rowData.isActive ? 'red' : 'green'}
-                              size="sm"
-                              appearance="primary"
-                            >
-                              {rowData.isActive ? 'Disable' : 'Enable'}
-                            </IconButton>
+                              <IconButton
+                                onClick={() => {
+                                  // handleToggleStatus(rowData)
+                                  onClose?.()
+                                }}
+                                icon={
+                                  <Icon
+                                    as={rowData.isActive ? IoMdRemoveCircle : IoMdCheckmarkCircle}
+                                  />
+                                }
+                                color={rowData.isActive ? 'red' : 'green'}
+                                size="sm"
+                                appearance="primary"
+                              >
+                                {rowData.isActive ? 'Disable' : 'Enable'}
+                              </IconButton>
 
-                            <IconButton
-                              onClick={() => {
-                                setSelectedUserId(rowData.id)
-                                setResetPassword({ newPassword: '', confirmPassword: '' })
-                                setResetPasswordOpen(true)
-                                onClose?.()
-                              }}
-                              icon={<Icon as={IoMdKey} />}
-                              color="orange"
-                              size="sm"
-                              appearance="primary"
-                            >
-                              Reset Password
-                            </IconButton>
+                              <IconButton
+                                onClick={() => {
+                                  setSelectedUserId(rowData.id)
+                                  setResetPassword({ newPassword: '', confirmPassword: '' })
+                                  setResetPasswordOpen(true)
+                                  onClose?.()
+                                }}
+                                icon={<Icon as={IoMdKey} />}
+                                color="orange"
+                                size="sm"
+                                appearance="primary"
+                              >
+                                Reset Password
+                              </IconButton>
 
-                            <IconButton
-                              onClick={() => {
-                                // handleDeleteUser(rowData.id)
-                                onClose?.()
-                              }}
-                              icon={<Icon as={IoMdTrash} />}
-                              color="red"
-                              size="sm"
-                              appearance="primary"
-                              // loading={deleteUserMutation.isPending}
-                            >
-                              Delete
-                            </IconButton>
+                              <IconButton
+                                onClick={() => {
+                                  // handleDeleteUser(rowData.id)
+                                  onClose?.()
+                                }}
+                                icon={<Icon as={IoMdTrash} />}
+                                color="red"
+                                size="sm"
+                                appearance="primary"
+                                // loading={deleteUserMutation.isPending}
+                              >
+                                Delete
+                              </IconButton>
+                            </div>
                           </div>
-                        </div>
-                      </Popover>
-                    )
-                  }}
-                >
-                  <IconButton icon={<Icon as={CgMore} />} size="xs" appearance="primary" />
-                </Whisper>
-              )}
-            </Cell>
-          </Column>
-        </Table>
-      </Panel>
-
+                        </Popover>
+                      )
+                    }}
+                  >
+                    <IconButton icon={<Icon as={CgMore} />} size="xs" appearance="primary" />
+                  </Whisper>
+                )}
+              </Cell>
+            </Column>
+          </Table>
+        </Panel>
+      )}
       <Modal
         open={createUserOpen}
         onClose={() => setCreateUserOpen(false)}

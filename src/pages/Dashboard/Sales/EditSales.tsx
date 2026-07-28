@@ -77,7 +77,7 @@ const baseModel = {
     .isRequired('Confirm amount is required.')
     .equalTo('amount', 'Amounts do not match.'),
   passport: StringType().isRequired('Passport name is required.'),
-  remarks: StringType().isRequired('Remarks is required.'),
+  remarks: StringType(),
 }
 
 // ========== Extra Validation Model (Per Sales Type) ==========
@@ -391,7 +391,7 @@ const Page = () => {
           <Form.Stack fluid className="md:col-span-2">
             <Form.Group controlId="remarks">
               <Form.Label>Remarks</Form.Label>
-              <Form.Control name="remarks" accepter={Textarea} rows={1} />
+              <Form.Control placeholder="(optional)" name="remarks" accepter={Textarea} rows={1} />
             </Form.Group>
           </Form.Stack>
 

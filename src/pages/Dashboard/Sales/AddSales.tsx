@@ -76,7 +76,7 @@ const baseModel = {
     .equalTo('purchaseAmount', 'Purchase amounts do not match.')
     .isRequired('Confirm amount is required.'),
   passport: StringType().isRequired('Passport name is required.'),
-  remarks: StringType().isRequired('Remarks is required.'),
+  remarks: StringType(),
 }
 
 // ========== Extra Validation Model (Per Sales Type) ==========
@@ -312,6 +312,9 @@ const Page = () => {
                 name="purchaseAmount"
                 accepter={NumberInput}
                 min={0}
+                formatter={(value) =>
+                  value !== null && value !== undefined ? Number(value).toLocaleString() : ''
+                }
                 errorPlacement="bottomEnd"
               />
             </Form.Group>
@@ -324,6 +327,9 @@ const Page = () => {
                 name="confirmPurchaseAmount"
                 accepter={NumberInput}
                 min={0}
+                formatter={(value) =>
+                  value !== null && value !== undefined ? Number(value).toLocaleString() : ''
+                }
                 errorPlacement="bottomEnd"
               />
             </Form.Group>
@@ -362,6 +368,9 @@ const Page = () => {
                 name="amount"
                 accepter={NumberInput}
                 min={0}
+                formatter={(value) =>
+                  value !== null && value !== undefined ? Number(value).toLocaleString() : ''
+                }
                 errorPlacement="bottomEnd"
               />
             </Form.Group>
@@ -374,6 +383,9 @@ const Page = () => {
                 name="confirmAmount"
                 accepter={NumberInput}
                 min={0}
+                formatter={(value) =>
+                  value !== null && value !== undefined ? Number(value).toLocaleString() : ''
+                }
                 errorPlacement="bottomEnd"
               />
             </Form.Group>
@@ -475,7 +487,7 @@ const Page = () => {
           <Form.Stack fluid className="col-span-1 md:col-span-2">
             <Form.Group controlId="remarks">
               <Form.Label>Remarks</Form.Label>
-              <Form.Control name="remarks" accepter={Textarea} rows={1} />
+              <Form.Control placeholder="(optional)" name="remarks" accepter={Textarea} rows={1} />
             </Form.Group>
           </Form.Stack>
         </div>

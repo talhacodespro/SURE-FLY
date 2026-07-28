@@ -1,9 +1,18 @@
 import { useCompanyBalance, useSearchCompanies } from '@/hooks/useCompany'
-import { usePaymentMethods } from '@/hooks/useTransaction'
+import { usePaymentMethods, useSendPayment } from '@/hooks/useTransaction'
 import { Icon } from '@rsuite/icons'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { MdPayment } from 'react-icons/md'
-import { Form, Button, Heading, Divider, Textarea, SelectPicker, NumberInput } from 'rsuite'
+import {
+  Form,
+  Button,
+  Heading,
+  Divider,
+  Textarea,
+  SelectPicker,
+  NumberInput,
+  type FormInstance,
+} from 'rsuite'
 import { NumberType, SchemaModel, StringType } from 'rsuite/Schema'
 
 const FormModel = SchemaModel({
@@ -24,7 +33,7 @@ const FormModel = SchemaModel({
 
   paymentMethod: StringType().isRequired('Payment method is required.'),
 
-  remarks: StringType().isRequired('Remark is required.'),
+  remarks: StringType(),
 })
 
 const initialValue = {
@@ -40,6 +49,9 @@ const initialValue = {
 type FormValue = typeof initialValue
 
 const Page = () => {
+  const formRef = useRef<FormInstance>(null)
+  const { mutate: sendPaymentMutate, isPending } = useSendPayment()
+
   const { data: companiesRes, isLoading: companiesLoading } = useSearchCompanies()
 
   const { data: paymentMethodsRes, isLoading: paymentMethodsLoading } = usePaymentMethods()
@@ -91,9 +103,20 @@ const Page = () => {
   }, [companyBalanceRes?.balance, accountBalance])
 
   const handleFormSubmit = () => {
-    console.log(formValue)
+    if (!formRef.current?.check()) return
 
-    setFormValue(initialValue)
+    const payload = {
+      companyId: Number(formValue.company),
+      amount: Number(formValue.paymentAmount),
+      paymentMethodId: Number(formValue.paymentMethod),
+      remarks: formValue.remarks.trim(),
+    }
+
+    sendPaymentMutate(payload, {
+      onSuccess: () => {
+        setFormValue(initialValue)
+      },
+    })
   }
 
   return (
@@ -105,6 +128,7 @@ const Page = () => {
       <Divider />
 
       <Form
+        ref={formRef}
         model={FormModel}
         formValue={formValue}
         onChange={(value) => setFormValue(value as FormValue)}
@@ -194,13 +218,25 @@ const Page = () => {
             <Form.Group controlId="remarks">
               <Form.Label>Remarks</Form.Label>
 
-              <Form.Control name="remarks" accepter={Textarea} rows={1} cols={2} />
+              <Form.Control
+                placeholder="(optional)"
+                name="remarks"
+                accepter={Textarea}
+                rows={1}
+                cols={2}
+              />
             </Form.Group>
           </Form.Stack>
         </div>
 
         <Form.Group className="mt-5 flex justify-end">
-          <Button appearance="primary" type="submit" startIcon={<Icon as={MdPayment} />}>
+          <Button
+            loading={isPending}
+            disabled={isPending}
+            appearance="primary"
+            type="submit"
+            startIcon={<Icon as={MdPayment} />}
+          >
             Payment
           </Button>
         </Form.Group>

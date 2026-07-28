@@ -1,9 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createPaymentMethod,
+  fundTransfer,
   getPaymentMethods,
   getTransaction,
   getTransactions,
+  receivePayment,
+  sendPayment,
   type CreatePaymentMethodPayload,
 } from '@/lib/api/transaction'
 import { toaster } from 'rsuite'
@@ -45,5 +48,44 @@ export const usePaymentMethods = () => {
     queryKey: ['payment-methods'],
     queryFn: () => getPaymentMethods(),
     staleTime: 1000 * 60 * 5,
+  })
+}
+
+export const useReceivePayment = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationKey: ['receive-payment'],
+    mutationFn: receivePayment,
+    onSuccess: (res) => {
+      toaster.push(message({ message: res.message, type: 'success' }), { placement: 'bottomEnd' })
+      qc.invalidateQueries({ queryKey: ['transactions'] })
+      qc.invalidateQueries({ queryKey: ['payment-methods'] })
+    },
+  })
+}
+
+export const useSendPayment = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationKey: ['send-payment'],
+    mutationFn: sendPayment,
+    onSuccess: (res) => {
+      toaster.push(message({ message: res.message, type: 'success' }), { placement: 'bottomEnd' })
+      qc.invalidateQueries({ queryKey: ['transactions'] })
+      qc.invalidateQueries({ queryKey: ['payment-methods'] })
+    },
+  })
+}
+
+export const useFundTransfer = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationKey: ['fund-transfer'],
+    mutationFn: fundTransfer,
+    onSuccess: (res) => {
+      toaster.push(message({ message: res.message, type: 'success' }), { placement: 'bottomEnd' })
+      qc.invalidateQueries({ queryKey: ['transactions'] })
+      qc.invalidateQueries({ queryKey: ['payment-methods'] })
+    },
   })
 }

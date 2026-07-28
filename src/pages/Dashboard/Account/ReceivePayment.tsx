@@ -1,9 +1,18 @@
 import { useCompanyBalance, useSearchCompanies } from '@/hooks/useCompany'
-import { usePaymentMethods } from '@/hooks/useTransaction'
+import { usePaymentMethods, useReceivePayment } from '@/hooks/useTransaction'
 import { Icon } from '@rsuite/icons'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { MdPayment } from 'react-icons/md'
-import { Form, Button, Heading, Divider, Textarea, SelectPicker, NumberInput } from 'rsuite'
+import {
+  Form,
+  Button,
+  Heading,
+  Divider,
+  Textarea,
+  SelectPicker,
+  NumberInput,
+  type FormInstance,
+} from 'rsuite'
 import { NumberType, SchemaModel, StringType } from 'rsuite/Schema'
 
 // ================= Validation =================
@@ -19,28 +28,33 @@ const FormModel = SchemaModel({
 
   receiverAccount: StringType().isRequired('Receiver account is required.'),
 
-  remarks: StringType().isRequired('Remark is required.'),
+  remarks: StringType(),
 })
 
 // ================= Initial Value =================
 
 const initialValue = {
-  company: '',
+  company: null as string | null,
   dueAmount: 0,
   receiveAmount: null as number | null,
   confirmAmount: null as number | null,
-  receiverAccount: '',
+  receiverAccount: null as string | null,
   remarks: '',
 }
 
 type FormValue = typeof initialValue
 
 const Page = () => {
+  // HOOKS
+  const { mutate: receivePaymentMutate, isPending } = useReceivePayment()
+  // ================= Form =================
+
+  const formRef = useRef<FormInstance>(null)
   // ================= Queries =================
 
   const { data: companiesRes, isLoading: companiesLoading } = useSearchCompanies()
 
-  const { data: paymentMethodsRes } = usePaymentMethods()
+  const { data: paymentMethodsRes, isLoading: paymentMethodsLoading } = usePaymentMethods()
 
   // ================= State =================
 
@@ -80,9 +94,21 @@ const Page = () => {
   // ================= Submit =================
 
   const handleFormSubmit = () => {
-    console.log(formValue)
+    const valid = formRef.current?.check()
+    if (!valid) return
 
-    setFormValue(initialValue)
+    const payload = {
+      companyId: Number(formValue.company),
+      receiveAmount: Number(formValue.receiveAmount),
+      receiverAccountId: Number(formValue.receiverAccount),
+      remarks: formValue.remarks.trim(),
+    }
+
+    receivePaymentMutate(payload, {
+      onSuccess: () => {
+        setFormValue(initialValue)
+      },
+    })
   }
 
   return (
@@ -98,6 +124,7 @@ const Page = () => {
         formValue={formValue}
         onChange={(value) => setFormValue(value as FormValue)}
         onSubmit={handleFormSubmit}
+        ref={formRef}
       >
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Form.Stack fluid>
@@ -111,6 +138,7 @@ const Page = () => {
                 data={companyData}
                 searchable
                 block
+                errorPlacement="bottomEnd"
               />
             </Form.Group>
           </Form.Stack>
@@ -135,6 +163,7 @@ const Page = () => {
                 name="receiveAmount"
                 accepter={NumberInput}
                 min={0}
+                errorPlacement="bottomEnd"
                 formatter={(value) => (value ? Number(value).toLocaleString() : '')}
               />
             </Form.Group>
@@ -148,6 +177,7 @@ const Page = () => {
                 name="confirmAmount"
                 accepter={NumberInput}
                 min={0}
+                errorPlacement="bottomEnd"
                 formatter={(value) => (value ? Number(value).toLocaleString() : '')}
               />
             </Form.Group>
@@ -162,6 +192,7 @@ const Page = () => {
                 accepter={SelectPicker}
                 data={paymentMethodData}
                 searchable={false}
+                loading={paymentMethodsLoading}
                 block
               />
             </Form.Group>
@@ -171,13 +202,19 @@ const Page = () => {
             <Form.Group controlId="remarks">
               <Form.Label>Remarks</Form.Label>
 
-              <Form.Control name="remarks" accepter={Textarea} rows={1} />
+              <Form.Control placeholder="(optional)" name="remarks" accepter={Textarea} rows={1} />
             </Form.Group>
           </Form.Stack>
         </div>
 
         <Form.Group className="mt-5 flex justify-end">
-          <Button appearance="primary" type="submit" startIcon={<Icon as={MdPayment} />}>
+          <Button
+            disabled={isPending}
+            loading={isPending}
+            appearance="primary"
+            type="submit"
+            startIcon={<Icon as={MdPayment} />}
+          >
             Receive
           </Button>
         </Form.Group>

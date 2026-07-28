@@ -18,7 +18,7 @@ const FormModel = SchemaModel({
     .isEmail('Please enter a valid email address.')
     .isRequired('Email is required.'),
   address: StringType().isRequired('Address is required.'),
-  remarks: StringType().isRequired('Remark is required.'),
+  remarks: StringType(),
 })
 
 // ========== Initial Form Value ==========
@@ -117,7 +117,12 @@ const Page = () => {
             <Form.Stack fluid className="col-span-1 md:col-span-2">
               <Form.Group controlId="remarks" className="md:col-span-2">
                 <Form.Label>Remarks</Form.Label>
-                <Form.Control name="remarks" accepter={Textarea} rows={1} />
+                <Form.Control
+                  placeholder="(optional)"
+                  name="remarks"
+                  accepter={Textarea}
+                  rows={1}
+                />
               </Form.Group>
             </Form.Stack>
           </div>
