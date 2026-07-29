@@ -144,6 +144,7 @@ const Page = () => {
                   data={paymentMethodData}
                   loading={isLoading}
                   searchable={false}
+                  errorPlacement="bottomEnd"
                 />
               </Form.Group>
             </Form.Stack>
@@ -157,6 +158,7 @@ const Page = () => {
                   data={paymentMethodData}
                   loading={isLoading}
                   searchable={false}
+                  errorPlacement="bottomEnd"
                 />
               </Form.Group>
             </Form.Stack>
@@ -189,6 +191,7 @@ const Page = () => {
                   accepter={NumberInput}
                   min={1}
                   max={formValue.fromAccountBalance}
+                  errorPlacement="bottomEnd"
                   formatter={(value) =>
                     value !== null && value !== undefined ? Number(value).toLocaleString() : ''
                   }

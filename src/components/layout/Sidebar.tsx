@@ -1,5 +1,6 @@
 import { Nav, Sidenav } from 'rsuite'
 import { Icon } from '@rsuite/icons'
+import { RiPassPendingFill } from 'react-icons/ri'
 import { Link, useLocation } from 'react-router'
 import { cn } from '@/lib/cn'
 import { useSidebar } from '@/store/useSidebar'
@@ -9,13 +10,52 @@ import { IoPricetagsSharp } from 'react-icons/io5'
 import { MdAccountBalanceWallet } from 'react-icons/md'
 import { TbCashBanknoteFilled } from 'react-icons/tb'
 
+import type { IconType } from 'react-icons'
+
+type SidebarChild = {
+  label: string
+  path: string
+}
+
+type SidebarItem =
+  | {
+      type: 'item'
+      label: string
+      icon: IconType
+      path: string
+    }
+  | {
+      type: 'menu'
+      label: string
+      icon: IconType
+      children: SidebarChild[]
+    }
+  | {
+      type: 'divider'
+    }
+
 // Sidebar items
-const sidebarItems = [
+const sidebarItems: SidebarItem[] = [
   {
     type: 'item',
     label: 'Dashboard',
     icon: BiSolidDashboard,
     path: '/',
+  },
+  {
+    type: 'menu',
+    label: 'Service Status',
+    icon: RiPassPendingFill,
+    children: [
+      {
+        label: 'Ticket Status',
+        path: '/ticket-status',
+      },
+      {
+        label: 'Visa Status',
+        path: '/visa-status',
+      },
+    ],
   },
   {
     type: 'menu',
