@@ -29,3 +29,7 @@ export { default as ListTransactions } from './Transactions/ListTransactions'
 export { default as AddExpense } from './Expense/AddExpense'
 export { default as ListExpense } from './Expense/ListExpense'
 export { default as ExpenseCategory } from './Expense/ExpenseCategory'
+
+// Status
+export { default as TicketStatus } from './Status/TicketStatus'
+export { default as VisaStatus } from './Status/VisaStatus'

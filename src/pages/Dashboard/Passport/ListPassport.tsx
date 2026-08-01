@@ -119,7 +119,7 @@ const Page = () => {
 
         <Column flexGrow={1} minWidth={250}>
           <HeaderCell>Remark</HeaderCell>
-          <Cell dataKey="remarks" />
+          <Cell>{(rowData) => rowData.remarks || 'N/A'}</Cell>
         </Column>
 
         {/* ========== Action Column with Popover Menu ========== */}
@@ -140,7 +140,10 @@ const Page = () => {
                             {/* View Button */}
                             <IconButton
                               onClick={() => {
-                                setViewItem(rowData as Passport)
+                                setViewItem({
+                                  ...(rowData as Passport),
+                                  remarks: rowData.remarks?.trim() || 'N/A',
+                                })
                                 setViewOpen(true)
                                 if (onClose) onClose()
                               }}
@@ -156,7 +159,7 @@ const Page = () => {
                                 navigate(`/edit-passport/${(rowData as Passport).id}`, {
                                   state: rowData,
                                 })
-                                if (onClose) onClose()
+                                onClose?.()
                               }}
                               icon={<Icon as={TiEdit} />}
                               color="blue"
@@ -168,7 +171,7 @@ const Page = () => {
                             <IconButton
                               onClick={() => {
                                 handleDelete((rowData as Passport).id)
-                                if (onClose) onClose()
+                                onClose?.()
                               }}
                               icon={<Icon as={Trash} />}
                               color="red"

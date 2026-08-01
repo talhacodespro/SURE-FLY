@@ -21,6 +21,9 @@ import {
   ExpenseCategory,
   ListTransactions,
   ReceivePayment,
+  TicketStatus,
+  VisaStatus,
+  // VisaStatus,
 } from '@/pages'
 import { createBrowserRouter } from 'react-router'
 import RequireAuth from '@/guards/RequireAuth'
@@ -108,6 +111,14 @@ const router = createBrowserRouter([
       {
         path: '/expense-category',
         element: <ExpenseCategory />,
+      },
+      {
+        path: '/ticket-status',
+        element: <TicketStatus />,
+      },
+      {
+        path: '/visa-status',
+        element: <VisaStatus />,
       },
     ],
   },
