@@ -1,3 +1,7 @@
+/**
+ * Vite entrypoint.
+ * Boots the React app, wires global providers, and loads global styles.
+ */
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'

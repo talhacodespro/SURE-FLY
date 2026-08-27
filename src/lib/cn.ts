@@ -1,3 +1,7 @@
+/**
+ * Class name utility.
+ * Merges conditional classes and resolves Tailwind conflicts.
+ */
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 

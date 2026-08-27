@@ -1,10 +1,13 @@
+/**
+ * Global providers wrapper.
+ * Central place for UI theme (RSuite) + data fetching cache (React Query).
+ */
 import { useTheme } from '@/store/useTheme'
 import type { ReactNode } from 'react'
 import { CustomProvider } from 'rsuite'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
-//  all provider defined here and wrap the app ⤵
 const Provider = ({ children }: { children: ReactNode }) => {
   const { theme } = useTheme()
   const queryClient = new QueryClient({

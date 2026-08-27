@@ -1,3 +1,7 @@
+/**
+ * Top navigation bar.
+ * Shows profile actions, theme toggle, and mobile menu button.
+ */
 import { useSidebar } from '@/store/useSidebar'
 import { Icon, Menu as RSuiteMenu } from '@rsuite/icons'
 import { forwardRef, useRef, type Ref } from 'react'
@@ -8,11 +12,8 @@ import { Avatar, Center, IconButton, Menu, Popover, Whisper } from 'rsuite'
 import { useTheme } from '@/store/useTheme'
 import { useNavigate } from 'react-router'
 import { useAuth } from '@/store/useAuth'
-import { useMe } from '@/hooks/useUser'
+import { useMe } from '@/hooks/useAuth'
 
-// ---------------
-// TYPES
-// ---------------
 interface MenuPopoverProps {
   onProfile: () => void
   onLogout: () => void
@@ -49,7 +50,7 @@ const Navbar = () => {
   const { theme, setTheme } = useTheme() // Theme state
   const { sidebar, setSidebar } = useSidebar() // Sidebar toggle state
   const { data: meRes } = useMe()
-  const avatar = meRes?.data?.avatar || ''
+
   const fullName = meRes?.data?.fullName || ''
   const logout = useAuth((state) => state.logout)
   const navigate = useNavigate()
@@ -74,7 +75,7 @@ const Navbar = () => {
   }
 
   return (
-    <div className="flex h-[50px] items-center justify-between bg-[#F7F7FA] px-1.5 shadow-xs dark:bg-[#1B1D24]">
+    <div className="flex h-[50px] items-center justify-between bg-[var(--fg)] px-1.5 shadow-xs">
       <div className="hidden md:block" />
 
       <div className="block md:hidden">
@@ -102,9 +103,7 @@ const Navbar = () => {
           }
         >
           <Center>
-            <Avatar src={avatar} size="sm">
-              {fullName?.charAt(0) || 'S'}
-            </Avatar>
+            <Avatar size="sm">{fullName?.charAt(0) || 'S'}</Avatar>
           </Center>
         </Whisper>
       </div>

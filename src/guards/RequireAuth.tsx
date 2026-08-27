@@ -1,3 +1,7 @@
+/**
+ * Route guard component.
+ * Redirects unauthenticated users to the login page.
+ */
 import { useAuth } from '@/store/useAuth'
 import type { ReactNode } from 'react'
 import { Navigate } from 'react-router'

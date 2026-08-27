@@ -1,3 +1,8 @@
+/**
+ * Main dashboard shell.
+ * Combines sidebar, navbar, and routed page content.
+ */
+import ImpersonationBanner from '@/components/ImpersonationBanner'
 import Navbar from '@/components/layout/Navbar'
 import Sidebar from '@/components/layout/Sidebar'
 import { Outlet } from 'react-router'
@@ -12,6 +17,8 @@ const DashboardLayout = () => {
         <div className="ml-0 flex-1 md:ml-64">
           <Navbar />
           <div className="px-2 py-3.5 md:px-3">
+            <ImpersonationBanner />
+
             <Outlet />
           </div>
         </div>

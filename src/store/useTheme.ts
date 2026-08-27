@@ -1,3 +1,7 @@
+/**
+ * Theme UI state store.
+ * Saves light/dark preference and syncs it to localStorage.
+ */
 import { create } from 'zustand'
 
 type Theme = 'dark' | 'light'

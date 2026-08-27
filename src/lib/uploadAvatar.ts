@@ -1,3 +1,7 @@
+/**
+ * Avatar upload helper.
+ * Validates image files and uploads them to Supabase storage.
+ */
 import { supabase } from '@/lib/supabase'
 
 const BUCKET = import.meta.env.VITE_SUPABASE_BUCKET || 'avatars'

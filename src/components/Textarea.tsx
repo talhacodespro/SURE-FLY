@@ -1,3 +1,7 @@
+/**
+ * Shared textarea wrapper.
+ * Uses RSuite Input with textarea mode and fixed resize behavior.
+ */
 import { forwardRef, type Ref } from 'react'
 import { Input } from 'rsuite'
 

@@ -1,80 +1,114 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createUser, deleteUser, getUser, getUsers, login, me, updateUser } from '@/lib/api/user'
-import type {
-  AuthResponse,
-  CreateUserPayload,
-  LoginPayload,
-  UpdateUserPayload,
-  User,
-  MeData,
-} from '@/lib/api/user'
-import type { ApiResponse } from '@/types/api'
-import { useAuth } from '@/store/useAuth'
 
-export const useUsers = () => {
-  return useQuery<User[], Error>({
-    queryKey: ['users'],
+import { createUser, getUser, getUsers, updateProfile, updateUser } from '@/lib/api/user'
+
+import type { CreateUserPayload, UpdateProfilePayload, UpdateUserPayload } from '@/lib/api/user'
+
+/* =========================================
+   Keys
+========================================= */
+
+export const userKeys = {
+  all: ['users'] as const,
+
+  me: ['auth', 'me'] as const,
+
+  detail: (id: number) => ['user', id] as const,
+}
+
+/* =========================================
+   Users
+========================================= */
+
+export const useUsers = (enabled = true) => {
+  return useQuery({
+    queryKey: userKeys.all,
+
     queryFn: getUsers,
+    enabled,
+    staleTime: 1000 * 60 * 5,
   })
 }
 
-export const useUser = (id: number | string, enabled = true) => {
-  return useQuery<User, Error>({
-    queryKey: ['user', id],
+/* =========================================
+   User
+========================================= */
+
+export const useUser = (id: number) => {
+  return useQuery({
+    queryKey: userKeys.detail(id),
+
     queryFn: () => getUser(id),
-    enabled: Boolean(id) && enabled,
+
+    enabled: Boolean(id),
   })
 }
+
+/* =========================================
+   Create User
+========================================= */
 
 export const useCreateUser = () => {
-  const qc = useQueryClient()
-  return useMutation<User, Error, CreateUserPayload>({
+  const queryClient = useQueryClient()
+
+  return useMutation({
     mutationKey: ['user', 'create'],
-    mutationFn: (payload) => createUser(payload),
+
+    mutationFn: (payload: CreateUserPayload) => createUser(payload),
+
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['users'] })
+      queryClient.invalidateQueries({
+        queryKey: userKeys.all,
+      })
     },
   })
 }
+
+/* =========================================
+   Update Profile
+========================================= */
+
+export const useUpdateProfile = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationKey: ['profile', 'update'],
+
+    mutationFn: (payload: UpdateProfilePayload) => updateProfile(payload),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: userKeys.me,
+      })
+
+      queryClient.invalidateQueries({
+        queryKey: userKeys.all,
+      })
+    },
+  })
+}
+
+/* =========================================
+   Admin Update User
+========================================= */
 
 export const useUpdateUser = () => {
-  const qc = useQueryClient()
-  return useMutation<User, Error, { id: number | string; payload: UpdateUserPayload }>({
+  const queryClient = useQueryClient()
+
+  return useMutation({
     mutationKey: ['user', 'update'],
-    mutationFn: ({ id, payload }) => updateUser(id, payload),
-    onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: ['users'] })
-      qc.invalidateQueries({ queryKey: ['user', data.id] })
-    },
-  })
-}
 
-export const useDeleteUser = () => {
-  const qc = useQueryClient()
-  return useMutation<{ success: boolean }, Error, number | string>({
-    mutationKey: ['user', 'delete'],
-    mutationFn: (id) => deleteUser(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['users'] })
-    },
-  })
-}
+    mutationFn: ({ id, payload }: { id: number; payload: UpdateUserPayload }) =>
+      updateUser(id, payload),
 
-export const useLogin = () => {
-  const qc = useQueryClient()
-  return useMutation<AuthResponse, Error, LoginPayload & { rememberMe?: boolean }>({
-    mutationKey: ['auth', 'login'],
-    mutationFn: ({ email, password }) => login({ email, password }),
-    onSuccess: (res, variables) => {
-      useAuth.getState().login(res.data.token, variables.rememberMe)
-      qc.invalidateQueries({ queryKey: ['auth', 'me'] })
-    },
-  })
-}
+    onSuccess: (_res, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: userKeys.all,
+      })
 
-export const useMe = () => {
-  return useQuery<ApiResponse<MeData>, Error>({
-    queryKey: ['auth', 'me'],
-    queryFn: me,
+      queryClient.invalidateQueries({
+        queryKey: userKeys.detail(variables.id),
+      })
+    },
   })
 }

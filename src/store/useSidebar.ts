@@ -1,3 +1,7 @@
+/**
+ * Sidebar UI state store.
+ * Keeps mobile sidebar open/close state globally.
+ */
 import { create } from 'zustand'
 
 type SidebarState = {

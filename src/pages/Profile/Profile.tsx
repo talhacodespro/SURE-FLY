@@ -1,412 +1,723 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+
 import {
-  Avatar,
   Button,
   Divider,
   Form,
   Heading,
-  Panel,
-  Schema,
-  Textarea,
-  DateInput,
-  StringType,
-  DateType,
-  Modal,
-  Uploader,
-  toaster,
-  Message,
-  Table,
-  SelectPicker,
   IconButton,
+  Message,
+  Modal,
+  Panel,
+  PasswordInput,
+  Popover,
+  Schema,
+  Table,
   Tag,
   Whisper,
-  Popover,
-  PasswordInput,
+  toaster,
 } from 'rsuite'
 
-import { Link } from 'react-router'
+import type { FormInstance } from 'rsuite'
+
 import { Icon } from '@rsuite/icons'
+
+import { Link } from 'react-router'
+
 import {
-  IoMdArrowBack,
-  IoMdClose,
-  IoMdSave,
   IoMdAdd,
-  IoMdTrash,
+  IoMdArrowBack,
+  IoMdCheckmarkCircle,
+  IoMdClose,
   IoMdKey,
   IoMdRemoveCircle,
-  IoMdCheckmarkCircle,
+  IoMdSave,
 } from 'react-icons/io'
-import { RxAvatar } from 'react-icons/rx'
-import type { FormInstance } from 'rsuite'
+
 import { FaUserEdit } from 'react-icons/fa'
+
 import { CgMore } from 'react-icons/cg'
-import { IoKeySharp } from 'react-icons/io5'
-import {
-  useMe,
-  useUpdateUser,
-  // useCreateUser,
-  // useUpdateUserRole,
-  // useUpdateUserStatus,
-  // useResetUserPassword,
-  // useDeleteUser,
-  // useChangePassword,
-} from '@/hooks/useUser'
-import { uploadAvatar } from '@/lib/uploadAvatar'
+
+import { useCreateUser, useUpdateProfile, useUpdateUser, useUsers } from '@/hooks/useUser'
+
+import { useImpersonateUser, useMe } from '@/hooks/useAuth'
+
+import type { User } from '@/lib/api/user'
+import { MdOutlineFlightTakeoff } from 'react-icons/md'
 
 const { Column, HeaderCell, Cell } = Table
 
-type UserRole = 'USER' | 'ADMIN'
+const { StringType } = Schema.Types
 
-type User = {
-  id: number
+/* =========================================
+   Types
+========================================= */
+
+type ProfileFormValue = {
   fullName: string
+
   email: string
-  phone?: string | null
-  avatar?: string | null
-  dob?: string | null
-  address?: string | null
-  role: UserRole
+
+  phone: string
+
+  password: string
+}
+
+type CreateAgentFormValue = {
+  fullName: string
+
+  email: string
+
+  phone: string
+
+  password: string
+}
+
+type EditAgentFormValue = {
+  id: number
+
+  fullName: string
+
+  email: string
+
+  phone: string
+
   isActive: boolean
 }
 
-const initialProfile = {
-  fullName: '',
-  email: '',
-  phone: '',
-  address: '',
-  dob: null as Date | null,
-  avatar: '',
-}
+/* =========================================
+   Initial Profile
+========================================= */
 
-const initialNewUser = {
+const initialProfile: ProfileFormValue = {
   fullName: '',
+
   email: '',
+
   phone: '',
-  address: '',
-  dob: null as Date | null,
-  role: 'USER' as UserRole,
+
   password: '',
+}
+
+/* =========================================
+   Initial Agent
+========================================= */
+
+const initialAgentValue: CreateAgentFormValue = {
+  fullName: '',
+
+  email: '',
+
+  phone: '',
+
+  password: '',
+}
+
+/* =========================================
+   Initial Reset Password
+========================================= */
+
+const initialResetPassword = {
+  newPassword: '',
+
   confirmPassword: '',
 }
 
-const initialPasswordValue = {
-  currentPassword: '',
-  newPassword: '',
-  confirmPassword: '',
-}
+/* =========================================
+   Page
+========================================= */
 
 const Page = () => {
-  const { data: meRes } = useMe()
+  /* =========================================
+     Current User
+  ========================================= */
+
+  const {
+    data: meRes,
+
+    isLoading: isMeLoading,
+  } = useMe()
+
   const user = meRes?.data
-  // const { data: usersRes, isLoading: isUsersLoading } = useUsers()
+
+  /* =========================================
+     Users
+  ========================================= */
+
+  const {
+    data: usersRes,
+
+    isLoading: isUsersLoading,
+
+    isFetching: isUsersFetching,
+  } = useUsers(user?.role === 'ADMIN')
+
+  /* =========================================
+     Mutations
+  ========================================= */
+
+  const updateProfileMutation = useUpdateProfile()
+
+  const createUserMutation = useCreateUser()
 
   const updateUserMutation = useUpdateUser()
-  // const changePasswordMutation = useChangePassword()
-  // const createUserMutation = useCreateUser()
-  // const updateRoleMutation = useUpdateUserRole()
-  // const updateStatusMutation = useUpdateUserStatus()
-  // const resetPasswordMutation = useResetUserPassword()
-  // const deleteUserMutation = useDeleteUser()
 
-  // const users: User[] = usersRes?.data ?? []
+  const {
+    mutate: impersonateUser,
 
-  const formRef = useRef<FormInstance>(null)
-  const passwordFormRef = useRef<FormInstance>(null)
-  const createUserFormRef = useRef<FormInstance>(null)
-  const editUserFormRef = useRef<FormInstance>(null)
+    isPending: isImpersonating,
+  } = useImpersonateUser()
 
-  const [editOpen, setEditOpen] = useState(false)
-  const [formValue, setFormValue] = useState(initialProfile)
-  const [fileInfo, setFileInfo] = useState<string | null>(null)
+  /* =========================================
+     Form Refs
+  ========================================= */
 
-  const [passwordOpen, setPasswordOpen] = useState(false)
-  const [passwordFormValue, setPasswordFormValue] = useState(initialPasswordValue)
+  const profileFormRef = useRef<FormInstance>(null)
 
-  const [createUserOpen, setCreateUserOpen] = useState(false)
-  const [newUser, setNewUser] = useState(initialNewUser)
+  const createAgentFormRef = useRef<FormInstance>(null)
 
-  const [editUserOpen, setEditUserOpen] = useState(false)
-  const [editingUser, setEditingUser] = useState<{
-    id: number
-    fullName: string
-    email: string
-    role: UserRole
-  } | null>(null)
+  const editAgentFormRef = useRef<FormInstance>(null)
+
+  /* =========================================
+     Profile State
+  ========================================= */
+
+  const [editProfileOpen, setEditProfileOpen] = useState(false)
+
+  const [profileValue, setProfileValue] = useState<ProfileFormValue>(initialProfile)
+
+  /* =========================================
+     Create Agent State
+  ========================================= */
+
+  const [createAgentOpen, setCreateAgentOpen] = useState(false)
+
+  const [newAgent, setNewAgent] = useState<CreateAgentFormValue>(initialAgentValue)
+
+  /* =========================================
+     Edit Agent State
+  ========================================= */
+
+  const [editAgentOpen, setEditAgentOpen] = useState(false)
+
+  const [editingAgent, setEditingAgent] = useState<EditAgentFormValue | null>(null)
+
+  /* =========================================
+     Reset Password State
+  ========================================= */
 
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false)
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
-  const [resetPassword, setResetPassword] = useState({
-    newPassword: '',
-    confirmPassword: '',
-  })
+
+  const [selectedAgent, setSelectedAgent] = useState<User | null>(null)
+
+  const [resetPassword, setResetPassword] = useState(initialResetPassword)
+
+  /* =========================================
+     Populate Current Profile
+  ========================================= */
 
   useEffect(() => {
-    if (!user) return
-
-    setFormValue({
-      fullName: user.fullName || '',
-      email: user.email || '',
-      phone: user.phone || '',
-      address: user.address || '',
-      avatar: user.avatar || '',
-      dob: user.dob ? new Date(user.dob) : null,
-    })
-  }, [meRes, user])
-
-  const profileModel = useMemo(() => {
-    return Schema.Model({
-      fullName: StringType().isRequired('Full name is required.'),
-      email: StringType().isEmail('Please enter a valid email.').isRequired('Email is required.'),
-      phone: StringType(),
-      address: StringType(),
-      dob: DateType(),
-    })
-  }, [])
-
-  const passwordModel = useMemo(() => {
-    return Schema.Model({
-      currentPassword: StringType()
-        .isRequired('Current password is required.')
-        .addRule((value) => value.length >= 6, 'Password must be at least 6 characters.'),
-      newPassword: StringType()
-        .isRequired('New password is required.')
-        .addRule((value) => value.length >= 6, 'Password must be at least 6 characters.'),
-      confirmPassword: StringType()
-        .isRequired('Confirm password is required.')
-        .addRule((value, data) => value === data.newPassword, "Password doesn't match."),
-    })
-  }, [])
-
-  const userModel = useMemo(() => {
-    return Schema.Model({
-      fullName: StringType().isRequired('Full name is required.'),
-      email: StringType().isEmail('Invalid email').isRequired('Email is required.'),
-      phone: StringType().isRequired('Phone is required.'),
-      address: StringType().isRequired('Address is required.'),
-      dob: DateType(),
-      role: StringType().isRequired('Role is required.'),
-      password: StringType()
-        .isRequired('Password is required.')
-        .addRule((value) => value.length >= 6, 'Password must be at least 6 characters.'),
-      confirmPassword: StringType()
-        .isRequired('Confirm password is required.')
-        .addRule((value, data) => value === data.password, "Password doesn't match."),
-    })
-  }, [])
-
-  const editUserModel = useMemo(() => {
-    return Schema.Model({
-      role: StringType().isRequired('Role is required.'),
-    })
-  }, [])
-
-  const previewFile = (file: File | Blob, callback: (value: string) => void) => {
-    const reader = new FileReader()
-
-    reader.onloadend = () => {
-      callback(reader.result as string)
+    if (!user) {
+      return
     }
 
-    reader.readAsDataURL(file)
+    setProfileValue({
+      fullName: user.fullName || '',
+
+      email: user.email || '',
+
+      phone: user.phone || '',
+
+      /*
+       * Password কখনো backend
+       * থেকে frontend-এ আসবে না।
+       */
+      password: '',
+    })
+  }, [user])
+
+  /* =========================================
+     Agents
+  ========================================= */
+
+  const agents = useMemo(() => {
+    return usersRes?.data?.filter((item) => item.role === 'AGENT') ?? []
+  }, [usersRes])
+
+  /* =========================================
+     Profile Validation
+  ========================================= */
+
+  const profileModel = useMemo(
+    () =>
+      Schema.Model({
+        fullName: StringType().isRequired('Full name is required.'),
+
+        email: StringType().isEmail('Please enter a valid email.').isRequired('Email is required.'),
+
+        phone: StringType().isRequired('Phone is required.'),
+
+        password: StringType().addRule(
+          (value) => {
+            /*
+             * Password optional.
+             */
+            if (!value) {
+              return true
+            }
+
+            return value.length >= 6
+          },
+
+          'Password must be at least 6 characters.',
+        ),
+      }),
+
+    [],
+  )
+
+  /* =========================================
+     Create Agent Validation
+  ========================================= */
+
+  const createAgentModel = useMemo(
+    () =>
+      Schema.Model({
+        fullName: StringType().isRequired('Full name is required.'),
+
+        email: StringType().isEmail('Please enter a valid email.').isRequired('Email is required.'),
+
+        phone: StringType().isRequired('Mobile is required.'),
+
+        password: StringType()
+          .isRequired('Password is required.')
+          .addRule(
+            (value) => value.length >= 6,
+
+            'Password must be at least 6 characters.',
+          ),
+      }),
+
+    [],
+  )
+
+  /* =========================================
+     Edit Agent Validation
+  ========================================= */
+
+  const editAgentModel = useMemo(
+    () =>
+      Schema.Model({
+        fullName: StringType().isRequired('Full name is required.'),
+
+        email: StringType().isEmail('Please enter a valid email.').isRequired('Email is required.'),
+
+        phone: StringType().isRequired('Mobile is required.'),
+      }),
+
+    [],
+  )
+
+  /* =========================================
+     Open Edit Profile
+  ========================================= */
+
+  const handleEditProfileOpen = () => {
+    setProfileValue((prev) => ({
+      ...prev,
+
+      password: '',
+    }))
+
+    setEditProfileOpen(true)
   }
 
-  const handleSubmit = () => {
-    const valid = formRef.current?.check()
-    if (!valid) return
+  /* =========================================
+     Close Edit Profile
+  ========================================= */
 
-    updateUserMutation.mutate(
+  const handleEditProfileClose = () => {
+    if (updateProfileMutation.isPending) {
+      return
+    }
+
+    setEditProfileOpen(false)
+
+    setProfileValue((prev) => ({
+      ...prev,
+
+      password: '',
+    }))
+  }
+
+  /* =========================================
+     Update Own Profile
+  ========================================= */
+
+  const handleProfileSubmit = () => {
+    const valid = profileFormRef.current?.check()
+
+    if (!valid) {
+      return
+    }
+
+    const password = profileValue.password.trim()
+
+    updateProfileMutation.mutate(
       {
-        id: meRes?.data?.id || 0,
-        payload: {
-          fullName: formValue.fullName.trim(),
-          email: formValue.email.trim(),
-          phone: formValue.phone.trim(),
-          address: formValue.address.trim(),
-          avatar: formValue.avatar,
-          dob: formValue.dob,
-        },
+        fullName: profileValue.fullName.trim(),
+
+        email: profileValue.email.trim(),
+
+        phone: profileValue.phone.trim(),
+
+        ...(password && {
+          password,
+        }),
       },
+
       {
         onSuccess: () => {
-          setEditOpen(false)
+          setEditProfileOpen(false)
+
+          setProfileValue((prev) => ({
+            ...prev,
+
+            password: '',
+          }))
+        },
+      },
+    )
+  }
+
+  /* =========================================
+     Open Create Agent
+  ========================================= */
+
+  const handleCreateAgentOpen = () => {
+    setNewAgent(initialAgentValue)
+
+    setCreateAgentOpen(true)
+  }
+
+  /* =========================================
+     Close Create Agent
+  ========================================= */
+
+  const handleCreateAgentClose = () => {
+    if (createUserMutation.isPending) {
+      return
+    }
+
+    setCreateAgentOpen(false)
+
+    setNewAgent(initialAgentValue)
+  }
+
+  /* =========================================
+     Create Agent
+  ========================================= */
+
+  const handleCreateAgent = () => {
+    const valid = createAgentFormRef.current?.check()
+
+    if (!valid) {
+      return
+    }
+
+    createUserMutation.mutate(
+      {
+        fullName: newAgent.fullName.trim(),
+
+        email: newAgent.email.trim(),
+
+        phone: newAgent.phone.trim(),
+
+        password: newAgent.password,
+
+        /*
+         * Profile থেকে শুধু
+         * AGENT create করা যাবে।
+         */
+        role: 'AGENT',
+      },
+
+      {
+        onSuccess: () => {
+          setCreateAgentOpen(false)
+
+          setNewAgent(initialAgentValue)
 
           toaster.push(
-            <Message showIcon type="success">
-              Profile updated successfully
+            <Message type="success" showIcon>
+              Agent account created successfully
             </Message>,
-            { placement: 'bottomEnd' },
+
+            {
+              placement: 'bottomEnd',
+            },
           )
         },
       },
     )
   }
 
-  const handlePasswordSubmit = () => {
-    const valid = passwordFormRef.current?.check()
-    if (!valid) return
+  /* =========================================
+     Open Edit Agent
+  ========================================= */
 
-    // changePasswordMutation.mutate(
-    //   {
-    //     currentPassword: passwordFormValue.currentPassword,
-    //     newPassword: passwordFormValue.newPassword,
-    //   },
-    //   {
-    //     onSuccess: () => {
-    //       setPasswordOpen(false)
-    //       setPasswordFormValue(initialPasswordValue)
+  const handleEditAgentOpen = (agent: User) => {
+    setEditingAgent({
+      id: agent.id,
 
-    //       toaster.push(
-    //         <Message showIcon type="success">
-    //           Password changed successfully
-    //         </Message>,
-    //         { placement: 'bottomEnd' },
-    //       )
-    //     },
-    //   },
-    // )
-  }
+      fullName: agent.fullName,
 
-  const handleCreateUser = () => {
-    if (!createUserFormRef.current?.check()) return
+      email: agent.email,
 
-    // createUserMutation.mutate(
-    //   {
-    //     fullName: newUser.name.trim(),
-    //     email: newUser.email.trim(),
-    //     phone: newUser.mobile.trim(),
-    //     address: newUser.address.trim(),
-    //     dob: newUser.dob,
-    //     role: newUser.role,
-    //     password: newUser.password,
-    //   },
-    //   {
-    //     onSuccess: () => {
-    //       setCreateUserOpen(false)
-    //       setNewUser(initialNewUser)
+      phone: agent.phone || '',
 
-    //       toaster.push(
-    //         <Message type="success" showIcon>
-    //           User created successfully
-    //         </Message>,
-    //         { placement: 'bottomEnd' },
-    //       )
-    //     },
-    //   },
-    // )
-  }
-
-  const handleEditUserClick = (user: User) => {
-    setEditingUser({
-      id: user.id,
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
+      isActive: agent.isActive,
     })
 
-    setEditUserOpen(true)
+    setEditAgentOpen(true)
   }
 
-  const handleUpdateUser = () => {
-    if (!editUserFormRef.current?.check() || !editingUser) return
+  /* =========================================
+     Close Edit Agent
+  ========================================= */
 
-    // updateRoleMutation.mutate(
-    //   {
-    //     id: editingUser.id,
-    //     role: editingUser.role,
-    //   },
-    //   {
-    //     onSuccess: () => {
-    //       setEditUserOpen(false)
+  const handleEditAgentClose = () => {
+    if (updateUserMutation.isPending) {
+      return
+    }
 
-    //       toaster.push(
-    //         <Message type="success" showIcon>
-    //           User role updated successfully
-    //         </Message>,
-    //         { placement: 'bottomEnd' },
-    //       )
-    //     },
-    //   },
-    // )
+    setEditAgentOpen(false)
+
+    setEditingAgent(null)
   }
 
-  // const handleDeleteUser = (id: number) => {
-  //   // deleteUserMutation.mutate(id, {
-  //   //   onSuccess: () => {
-  //   //     toaster.push(
-  //   //       <Message type="success" showIcon>
-  //   //         User deleted successfully
-  //   //       </Message>,
-  //   //       { placement: 'bottomEnd' },
-  //   //     )
-  //   //   },
-  //   // })
-  // }
+  /* =========================================
+     Update Agent
+  ========================================= */
 
-  // const handleToggleStatus = (user: User) => {
-  //   // updateStatusMutation.mutate(
-  //   //   {
-  //   //     id: user.id,
-  //   //     isActive: !user.isActive,
-  //   //   },
-  //   //   {
-  //   //     onSuccess: () => {
-  //   //       toaster.push(
-  //   //         <Message type="success" showIcon>
-  //   //           User status updated successfully
-  //   //         </Message>,
-  //   //         { placement: 'bottomEnd' },
-  //   //       )
-  //   //     },
-  //   //   },
-  //   // )
-  // }
+  const handleUpdateAgent = () => {
+    const valid = editAgentFormRef.current?.check()
+
+    if (!valid || !editingAgent) {
+      return
+    }
+
+    updateUserMutation.mutate(
+      {
+        id: editingAgent.id,
+
+        payload: {
+          fullName: editingAgent.fullName.trim(),
+
+          email: editingAgent.email.trim(),
+
+          phone: editingAgent.phone.trim(),
+        },
+      },
+
+      {
+        onSuccess: () => {
+          setEditAgentOpen(false)
+
+          setEditingAgent(null)
+
+          toaster.push(
+            <Message type="success" showIcon>
+              Agent updated successfully
+            </Message>,
+
+            {
+              placement: 'bottomEnd',
+            },
+          )
+        },
+      },
+    )
+  }
+
+  /* =========================================
+     Toggle Agent Status
+  ========================================= */
+
+  const handleToggleAgentStatus = (agent: User) => {
+    updateUserMutation.mutate(
+      {
+        id: agent.id,
+
+        payload: {
+          isActive: !agent.isActive,
+        },
+      },
+
+      {
+        onSuccess: () => {
+          toaster.push(
+            <Message type="success" showIcon>
+              Agent {agent.isActive ? 'disabled' : 'enabled'} successfully
+            </Message>,
+
+            {
+              placement: 'bottomEnd',
+            },
+          )
+        },
+      },
+    )
+  }
+
+  /* =========================================
+     Open Reset Password
+  ========================================= */
+
+  const handleResetPasswordOpen = (agent: User) => {
+    setSelectedAgent(agent)
+
+    setResetPassword(initialResetPassword)
+
+    setResetPasswordOpen(true)
+  }
+
+  /* =========================================
+     Close Reset Password
+  ========================================= */
+
+  const handleResetPasswordClose = () => {
+    if (updateUserMutation.isPending) {
+      return
+    }
+
+    setResetPasswordOpen(false)
+
+    setSelectedAgent(null)
+
+    setResetPassword(initialResetPassword)
+  }
+
+  /* =========================================
+     Reset Agent Password
+  ========================================= */
 
   const handleResetPassword = () => {
-    if (!selectedUserId) return
+    if (!selectedAgent) {
+      return
+    }
 
-    if (resetPassword.newPassword.length < 6) {
+    const newPassword = resetPassword.newPassword.trim()
+
+    const confirmPassword = resetPassword.confirmPassword.trim()
+
+    /* =====================================
+         Password Length
+      ===================================== */
+
+    if (newPassword.length < 6) {
       toaster.push(
         <Message type="error" showIcon>
           Password must be at least 6 characters
         </Message>,
-        { placement: 'bottomEnd' },
+
+        {
+          placement: 'bottomEnd',
+        },
       )
+
       return
     }
 
-    if (resetPassword.newPassword !== resetPassword.confirmPassword) {
+    /* =====================================
+         Password Match
+      ===================================== */
+
+    if (newPassword !== confirmPassword) {
       toaster.push(
         <Message type="error" showIcon>
           Password doesn't match
         </Message>,
-        { placement: 'bottomEnd' },
+
+        {
+          placement: 'bottomEnd',
+        },
       )
+
       return
     }
 
-    // resetPasswordMutation.mutate(
-    //   {
-    //     id: selectedUserId,
-    //     newPassword: resetPassword.newPassword,
-    //   },
-    //   {
-    //     onSuccess: () => {
-    //       setResetPasswordOpen(false)
-    //       setSelectedUserId(null)
-    //       setResetPassword({ newPassword: '', confirmPassword: '' })
+    /* =====================================
+         Update
+      ===================================== */
 
-    //       toaster.push(
-    //         <Message type="success" showIcon>
-    //           Password reset successfully
-    //         </Message>,
-    //         { placement: 'bottomEnd' },
-    //       )
-    //     },
-    //   },
-    // )
+    updateUserMutation.mutate(
+      {
+        id: selectedAgent.id,
+
+        payload: {
+          password: newPassword,
+        },
+      },
+
+      {
+        onSuccess: () => {
+          setResetPasswordOpen(false)
+
+          setSelectedAgent(null)
+
+          setResetPassword(initialResetPassword)
+
+          toaster.push(
+            <Message type="success" showIcon>
+              Agent password reset successfully
+            </Message>,
+
+            {
+              placement: 'bottomEnd',
+            },
+          )
+        },
+      },
+    )
   }
+
+  /* =========================================
+     Login As Agent
+  ========================================= */
+
+  const handleLoginAsAgent = (agent: User, onClose?: () => void) => {
+    if (!agent.isActive) {
+      toaster.push(
+        <Message type="warning" showIcon>
+          Disabled agent account cannot be opened
+        </Message>,
+
+        {
+          placement: 'bottomEnd',
+        },
+      )
+
+      return
+    }
+
+    impersonateUser(agent.id)
+
+    onClose?.()
+  }
+
+  /* =========================================
+     Loading
+  ========================================= */
+
+  const agentsLoading = isUsersLoading || isUsersFetching
+
   return (
     <div className="container mx-auto max-w-7xl p-5">
+      {/* =====================================
+          Header
+      ===================================== */}
+
       <div className="mb-3 flex items-center justify-between">
         <Link to="/">
           <Button appearance="subtle" startIcon={<Icon as={IoMdArrowBack} />}>
@@ -419,355 +730,153 @@ const Page = () => {
 
       <Divider />
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Panel bordered className="md:col-span-1">
-          <div className="flex flex-col items-center gap-3">
-            <Avatar
-              size="lg"
-              src={formValue.avatar || undefined}
-              // className="bg-primary/10 text-primary"
-            >
-              {formValue.fullName?.charAt(0) || 'S'}
-            </Avatar>
+      {/* =====================================
+          Profile Overview
+      ===================================== */}
 
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {/* =================================
+            Profile Card
+        ================================= */}
+
+        <Panel bordered className="md:col-span-1">
+          <div className="flex h-full flex-col items-center">
             <div className="text-center">
-              <div className="text-lg font-semibold">{formValue.fullName || '-'}</div>
-              <div className="text-sm text-[var(--rs-text-secondary)]">
-                {formValue.email || '-'}
+              <Heading level={5}>
+                {isMeLoading ? 'Loading...' : profileValue.fullName || '-'}
+              </Heading>
+
+              <div className="mt-1 text-sm text-[var(--rs-text-secondary)]">
+                {profileValue.email || '-'}
               </div>
+
+              {user?.role && (
+                <div className="mt-3 flex justify-center">
+                  <Tag color={user.role === 'ADMIN' ? 'blue' : 'green'}>{user.role}</Tag>
+                </div>
+              )}
             </div>
 
-            <div className="mt-2 flex gap-2">
+            <div className="mt-5">
               <Button
                 startIcon={<Icon as={FaUserEdit} />}
                 appearance="primary"
-                onClick={() => setEditOpen(true)}
+                onClick={handleEditProfileOpen}
               >
                 Edit Profile
-              </Button>
-
-              <Button
-                startIcon={<Icon as={IoKeySharp} />}
-                appearance="default"
-                onClick={() => setPasswordOpen(true)}
-              >
-                Change Password
               </Button>
             </div>
           </div>
         </Panel>
 
+        {/* =================================
+            Profile Details
+        ================================= */}
+
         <Panel bordered className="md:col-span-2">
-          <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
+            {/* Full Name */}
+
             <div>
               <div className="text-sm text-[var(--rs-text-secondary)]">Full Name</div>
-              <div className="text-base">{formValue.fullName || '-'}</div>
+
+              <div className="mt-1 text-base">{profileValue.fullName || '-'}</div>
             </div>
+
+            {/* Email */}
 
             <div>
               <div className="text-sm text-[var(--rs-text-secondary)]">Email</div>
-              <div className="text-base">{formValue.email || '-'}</div>
+
+              <div className="mt-1 text-base">{profileValue.email || '-'}</div>
             </div>
+
+            {/* Phone */}
 
             <div>
               <div className="text-sm text-[var(--rs-text-secondary)]">Phone</div>
-              <div className="text-base">{formValue.phone || '-'}</div>
+
+              <div className="mt-1 text-base">{profileValue.phone || '-'}</div>
             </div>
+
+            {/* Role */}
 
             <div>
-              <div className="text-sm text-[var(--rs-text-secondary)]">Date of Birth</div>
-              <div className="text-base">
-                {formValue.dob ? formValue.dob.toLocaleDateString() : '-'}
-              </div>
-            </div>
+              <div className="text-sm text-[var(--rs-text-secondary)]">Role</div>
 
-            <div className="md:col-span-2">
-              <div className="text-sm text-[var(--rs-text-secondary)]">Address</div>
-              <div className="text-base">{formValue.address || '-'}</div>
+              <div className="mt-1">
+                <Tag color={user?.role === 'ADMIN' ? 'blue' : 'green'}>{user?.role || 'AGENT'}</Tag>
+              </div>
             </div>
           </div>
         </Panel>
       </div>
 
-      <Modal open={editOpen} onClose={() => setEditOpen(false)} size="md" backdrop="static">
-        <Modal.Header closeButton={false}>
-          <Modal.Title>Edit Profile</Modal.Title>
-        </Modal.Header>
-
-        <Modal.Body>
-          <Form
-            ref={formRef}
-            model={profileModel}
-            formValue={formValue}
-            onChange={(val) => setFormValue(val as typeof formValue)}
-          >
-            <div className="mx-2 grid grid-cols-1 gap-x-3 gap-y-4 md:grid-cols-2">
-              <Form.Stack fluid>
-                <Form.Group controlId="fullName">
-                  <Form.Label>Full Name</Form.Label>
-                  <Form.Control name="fullName" errorPlacement="bottomEnd" />
-                </Form.Group>
-              </Form.Stack>
-
-              <Form.Stack fluid>
-                <Form.Group controlId="email">
-                  <Form.Label>Email</Form.Label>
-                  <Form.Control name="email" errorPlacement="bottomEnd" />
-                </Form.Group>
-              </Form.Stack>
-
-              <Form.Stack fluid>
-                <Form.Group controlId="phone">
-                  <Form.Label>Phone</Form.Label>
-                  <Form.Control name="phone" errorPlacement="bottomEnd" />
-                </Form.Group>
-              </Form.Stack>
-
-              <Form.Stack fluid>
-                <Form.Group controlId="dob">
-                  <Form.Label>Date of Birth</Form.Label>
-                  <Form.Control
-                    name="dob"
-                    accepter={DateInput}
-                    format="dd/MMM/yyyy"
-                    errorPlacement="bottomEnd"
-                  />
-                </Form.Group>
-              </Form.Stack>
-
-              <Form.Stack fluid className="md:col-span-2">
-                <Form.Group controlId="address">
-                  <Form.Label>Address</Form.Label>
-                  <Form.Control
-                    name="address"
-                    accepter={Textarea}
-                    rows={2}
-                    errorPlacement="bottomEnd"
-                  />
-                </Form.Group>
-              </Form.Stack>
-
-              <Form.Stack fluid className="md:col-span-2">
-                <Form.Group>
-                  <Form.Label>Avatar</Form.Label>
-
-                  <Uploader
-                    fileListVisible={false}
-                    listType="picture"
-                    accept="image/*"
-                    autoUpload={false}
-                    action="#"
-                    width={500}
-                    height={500}
-                    onChange={async (fileList) => {
-                      const latestFile = fileList[fileList.length - 1]
-
-                      if (!latestFile?.blobFile) return
-
-                      try {
-                        // 1. First local preview show korbe
-                        previewFile(latestFile.blobFile, (value) => {
-                          setFileInfo(value)
-                        })
-
-                        // 2. Tarpor Supabase e upload korbe
-                        const avatar = await uploadAvatar(latestFile.blobFile, meRes?.data?.id)
-
-                        // 3. Upload er por real URL formValue te set korbe
-                        setFormValue((prev) => ({
-                          ...prev,
-                          avatar,
-                        }))
-
-                        toaster.push(
-                          <Message type="success" showIcon>
-                            Avatar uploaded successfully
-                          </Message>,
-                          { placement: 'bottomEnd' },
-                        )
-                      } catch (error) {
-                        toaster.push(
-                          <Message type="error" showIcon>
-                            {error instanceof Error ? error.message : 'Avatar upload failed'}
-                          </Message>,
-                          { placement: 'bottomEnd' },
-                        )
-                      }
-                    }}
-                  >
-                    <button
-                      type="button"
-                      style={{ width: '160px', height: '160px' }}
-                      className="flex cursor-pointer items-center justify-center overflow-hidden rounded-md border border-dashed bg-transparent"
-                    >
-                      {fileInfo || formValue.avatar ? (
-                        <img
-                          src={fileInfo || formValue.avatar}
-                          alt="Avatar Preview"
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <RxAvatar size={40} color="var(--rs-gray-500)" />
-                      )}
-                    </button>
-                  </Uploader>
-                </Form.Group>
-              </Form.Stack>
-            </div>
-          </Form>
-        </Modal.Body>
-
-        <Modal.Footer>
-          <Button
-            startIcon={<Icon as={IoMdClose} />}
-            appearance="default"
-            onClick={() => setEditOpen(false)}
-          >
-            Cancel
-          </Button>
-
-          <Button
-            startIcon={<Icon as={IoMdSave} />}
-            appearance="primary"
-            onClick={handleSubmit}
-            loading={updateUserMutation.isPending}
-          >
-            Save Changes
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      <Modal open={passwordOpen} onClose={() => setPasswordOpen(false)} size="xs" backdrop="static">
-        <Modal.Header closeButton={false}>
-          <Modal.Title>Change Password</Modal.Title>
-        </Modal.Header>
-
-        <Modal.Body>
-          <Form
-            ref={passwordFormRef}
-            model={passwordModel}
-            formValue={passwordFormValue}
-            onChange={(val) => setPasswordFormValue(val as typeof passwordFormValue)}
-          >
-            <div className="grid grid-cols-1 gap-x-3 gap-y-4">
-              <Form.Stack fluid>
-                <Form.Group controlId="currentPassword">
-                  <Form.Label>Current Password</Form.Label>
-                  <Form.Control
-                    name="currentPassword"
-                    type="password"
-                    accepter={PasswordInput}
-                    errorPlacement="bottomEnd"
-                  />
-                </Form.Group>
-              </Form.Stack>
-
-              <Form.Stack fluid>
-                <Form.Group controlId="newPassword">
-                  <Form.Label>New Password</Form.Label>
-                  <Form.Control
-                    name="newPassword"
-                    type="password"
-                    accepter={PasswordInput}
-                    errorPlacement="bottomEnd"
-                  />
-                </Form.Group>
-              </Form.Stack>
-
-              <Form.Stack fluid className="mb-4">
-                <Form.Group controlId="confirmPassword">
-                  <Form.Label>Confirm Password</Form.Label>
-                  <Form.Control
-                    name="confirmPassword"
-                    type="password"
-                    accepter={PasswordInput}
-                    errorPlacement="bottomEnd"
-                  />
-                </Form.Group>
-              </Form.Stack>
-            </div>
-          </Form>
-        </Modal.Body>
-
-        <Modal.Footer>
-          <Button
-            startIcon={<Icon as={IoMdClose} />}
-            appearance="default"
-            onClick={() => setPasswordOpen(false)}
-          >
-            Cancel
-          </Button>
-
-          <Button
-            startIcon={<Icon as={IoMdSave} />}
-            appearance="primary"
-            onClick={handlePasswordSubmit}
-            // loading={changePasswordMutation.isPending}
-          >
-            Save Password
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      {/* =====================================
+          Agent Accounts
+          ADMIN ONLY
+      ===================================== */}
 
       {user?.role === 'ADMIN' && (
         <Panel
+          bordered
+          className="mt-5"
           header={
             <div className="flex items-center justify-between">
-              <Heading level={4}>User Role</Heading>
+              <Heading level={4}>Agent Accounts</Heading>
 
               <Button
                 startIcon={<Icon as={IoMdAdd} />}
                 appearance="primary"
-                onClick={() => setCreateUserOpen(true)}
+                onClick={handleCreateAgentOpen}
               >
-                Create User
+                Create Agent
               </Button>
             </div>
           }
-          bordered
-          className="mt-5"
         >
-          <Table autoHeight data={[]} rowKey="id">
-            <Column flexGrow={1} fixed>
-              <HeaderCell>Name</HeaderCell>
+          {/* =====================================
+              Agent Table
+          ===================================== */}
+
+          <Table autoHeight bordered cellBordered data={agents} rowKey="id" loading={agentsLoading}>
+            {/* Full Name */}
+
+            <Column flexGrow={1} minWidth={180} fixed>
+              <HeaderCell>Full Name</HeaderCell>
+
               <Cell dataKey="fullName" />
             </Column>
 
-            <Column flexGrow={1}>
+            {/* Email */}
+
+            <Column flexGrow={1} minWidth={220}>
               <HeaderCell>Email</HeaderCell>
+
               <Cell dataKey="email" />
             </Column>
 
-            <Column width={120}>
+            {/* Mobile */}
+
+            <Column width={150}>
               <HeaderCell>Mobile</HeaderCell>
-              <Cell dataKey="phone" />
+
+              <Cell>{(rowData: User) => rowData.phone || 'N/A'}</Cell>
             </Column>
 
-            <Column width={120}>
-              <HeaderCell>Date of Birth</HeaderCell>
-              <Cell>
-                {(rowData: User) => (
-                  <span>{rowData.dob ? new Date(rowData.dob).toLocaleDateString() : '-'}</span>
-                )}
-              </Cell>
-            </Column>
+            {/* Role */}
 
-            <Column flexGrow={2}>
-              <HeaderCell>Address</HeaderCell>
-              <Cell dataKey="address" />
-            </Column>
-
-            <Column width={100}>
+            <Column width={110} align="center">
               <HeaderCell>Role</HeaderCell>
-              <Cell>
-                {(rowData: User) => (
-                  <Tag color={rowData.role === 'ADMIN' ? 'blue' : 'green'}>{rowData.role}</Tag>
-                )}
-              </Cell>
+
+              <Cell>{(rowData: User) => <Tag color="green">{rowData.role}</Tag>}</Cell>
             </Column>
 
-            <Column width={100}>
+            {/* Status */}
+
+            <Column width={110} align="center">
               <HeaderCell>Status</HeaderCell>
+
               <Cell>
                 {(rowData: User) => (
                   <Tag color={rowData.isActive ? 'green' : 'red'}>
@@ -777,175 +886,219 @@ const Page = () => {
               </Cell>
             </Column>
 
-            <Column width={100} align="center">
+            {/* =====================================
+                Action
+            ===================================== */}
+
+            <Column width={90} fixed="right" align="center">
               <HeaderCell>Action</HeaderCell>
 
-              <Cell>
+              <Cell verticalAlign="middle">
                 {(rowData: User) => (
                   <Whisper
                     placement="bottomEnd"
                     trigger="click"
-                    speaker={({ className, onClose, ...props }, ref) => {
-                      return (
-                        <Popover ref={ref} full {...props} className={`${className} shadow-md`}>
-                          <div className="px-2 pt-2 pb-2">
-                            <div className="flex flex-col items-start gap-y-2">
-                              <IconButton
-                                onClick={() => {
-                                  handleEditUserClick(rowData)
-                                  onClose?.()
-                                }}
-                                icon={<Icon as={FaUserEdit} />}
-                                color="blue"
-                                size="sm"
-                                appearance="primary"
-                              >
+                    speaker={(
+                      { className, onClose, ...props },
+
+                      ref,
+                    ) => (
+                      <Popover ref={ref} full {...props} className={`${className} shadow-md`}>
+                        <div className="px-2 py-2">
+                          <div className="flex flex-col items-start gap-2">
+                            {/* =================================
                                 Edit
-                              </IconButton>
+                            ================================= */}
 
-                              <IconButton
-                                onClick={() => {
-                                  // handleToggleStatus(rowData)
-                                  onClose?.()
-                                }}
-                                icon={
-                                  <Icon
-                                    as={rowData.isActive ? IoMdRemoveCircle : IoMdCheckmarkCircle}
-                                  />
-                                }
-                                color={rowData.isActive ? 'red' : 'green'}
-                                size="sm"
-                                appearance="primary"
-                              >
-                                {rowData.isActive ? 'Disable' : 'Enable'}
-                              </IconButton>
+                            <IconButton
+                              icon={<Icon as={FaUserEdit} />}
+                              appearance="primary"
+                              color="blue"
+                              size="sm"
+                              aria-label="Edit agent"
+                              onClick={() => {
+                                handleEditAgentOpen(rowData)
 
-                              <IconButton
-                                onClick={() => {
-                                  setSelectedUserId(rowData.id)
-                                  setResetPassword({ newPassword: '', confirmPassword: '' })
-                                  setResetPasswordOpen(true)
-                                  onClose?.()
-                                }}
-                                icon={<Icon as={IoMdKey} />}
-                                color="orange"
-                                size="sm"
-                                appearance="primary"
-                              >
+                                onClose?.()
+                              }}
+                            >
+                              Edit
+                            </IconButton>
+
+                            {/* =================================
+                                Enable / Disable
+                            ================================= */}
+
+                            <IconButton
+                              icon={
+                                <Icon
+                                  as={rowData.isActive ? IoMdRemoveCircle : IoMdCheckmarkCircle}
+                                />
+                              }
+                              appearance="primary"
+                              color={rowData.isActive ? 'red' : 'green'}
+                              size="sm"
+                              loading={updateUserMutation.isPending}
+                              aria-label={rowData.isActive ? 'Disable agent' : 'Enable agent'}
+                              onClick={() => {
+                                handleToggleAgentStatus(rowData)
+
+                                onClose?.()
+                              }}
+                            >
+                              {rowData.isActive ? 'Disable' : 'Enable'}
+                            </IconButton>
+
+                            {/* =================================
+                                Login As Agent
+                            ================================= */}
+
+                            <IconButton
+                              appearance="primary"
+                              icon={<Icon as={MdOutlineFlightTakeoff} />}
+                              color="violet"
+                              size="sm"
+                              loading={isImpersonating}
+                              disabled={isImpersonating || !rowData.isActive}
+                              aria-label="Login as agent"
+                              onClick={() =>
+                                handleLoginAsAgent(
+                                  rowData,
+
+                                  onClose,
+                                )
+                              }
+                            >
+                              Login as Agent
+                            </IconButton>
+
+                            {/* =================================
                                 Reset Password
-                              </IconButton>
+                            ================================= */}
 
-                              <IconButton
-                                onClick={() => {
-                                  // handleDeleteUser(rowData.id)
-                                  onClose?.()
-                                }}
-                                icon={<Icon as={IoMdTrash} />}
-                                color="red"
-                                size="sm"
-                                appearance="primary"
-                                // loading={deleteUserMutation.isPending}
-                              >
-                                Delete
-                              </IconButton>
-                            </div>
+                            <IconButton
+                              icon={<Icon as={IoMdKey} />}
+                              appearance="primary"
+                              color="orange"
+                              size="sm"
+                              aria-label="Reset agent password"
+                              onClick={() => {
+                                handleResetPasswordOpen(rowData)
+
+                                onClose?.()
+                              }}
+                            >
+                              Reset Password
+                            </IconButton>
                           </div>
-                        </Popover>
-                      )
-                    }}
+                        </div>
+                      </Popover>
+                    )}
                   >
-                    <IconButton icon={<Icon as={CgMore} />} size="xs" appearance="primary" />
+                    <IconButton
+                      icon={<Icon as={CgMore} />}
+                      size="xs"
+                      appearance="primary"
+                      aria-label="Agent actions"
+                    />
                   </Whisper>
                 )}
               </Cell>
             </Column>
           </Table>
+
+          {/* =====================================
+              Empty State
+          ===================================== */}
+
+          {!agentsLoading && agents.length === 0 && (
+            <div className="py-10 text-center">
+              <div className="font-medium">No agent account found</div>
+
+              <div className="mt-1 text-sm text-[var(--rs-text-secondary)]">
+                Create your first agent account.
+              </div>
+            </div>
+          )}
         </Panel>
       )}
-      <Modal
-        open={createUserOpen}
-        onClose={() => setCreateUserOpen(false)}
-        size="sm"
-        backdrop="static"
-      >
+
+      {/* =====================================
+          Edit Profile Modal
+      ===================================== */}
+
+      <Modal open={editProfileOpen} onClose={handleEditProfileClose} size="sm" backdrop="static">
         <Modal.Header closeButton={false}>
-          <Modal.Title>Create New User</Modal.Title>
+          <Modal.Title>Edit Profile</Modal.Title>
         </Modal.Header>
 
         <Modal.Body>
           <Form
-            ref={createUserFormRef}
-            model={userModel}
-            formValue={newUser}
-            onChange={(val) => setNewUser(val as typeof newUser)}
+            ref={profileFormRef}
+            model={profileModel}
+            formValue={profileValue}
+            onChange={(value) => setProfileValue(value as ProfileFormValue)}
           >
             <div className="grid grid-cols-1 gap-x-3 gap-y-4">
+              {/* Full Name */}
+
               <Form.Stack fluid>
-                <Form.Group controlId="newName">
-                  <Form.Label>Name</Form.Label>
-                  <Form.Control name="name" errorPlacement="bottomEnd" />
+                <Form.Group controlId="fullName">
+                  <Form.Label>Full Name</Form.Label>
+
+                  <Form.Control
+                    name="fullName"
+                    disabled={updateProfileMutation.isPending}
+                    errorPlacement="bottomEnd"
+                  />
                 </Form.Group>
               </Form.Stack>
 
+              {/* Email */}
+
               <Form.Stack fluid>
-                <Form.Group controlId="newEmail">
+                <Form.Group controlId="email">
                   <Form.Label>Email</Form.Label>
-                  <Form.Control name="email" errorPlacement="bottomEnd" />
-                </Form.Group>
-              </Form.Stack>
 
-              <Form.Stack fluid>
-                <Form.Group controlId="newMobile">
-                  <Form.Label>Mobile</Form.Label>
-                  <Form.Control name="mobile" errorPlacement="bottomEnd" />
-                </Form.Group>
-              </Form.Stack>
-
-              <Form.Stack fluid>
-                <Form.Group controlId="newAddress">
-                  <Form.Label>Address</Form.Label>
-                  <Form.Control name="address" errorPlacement="bottomEnd" />
-                </Form.Group>
-              </Form.Stack>
-
-              <Form.Stack fluid>
-                <Form.Group controlId="newRole">
-                  <Form.Label>Role</Form.Label>
                   <Form.Control
-                    cleanable={false}
-                    name="role"
-                    accepter={SelectPicker}
-                    data={[
-                      { label: 'Admin', value: 'ADMIN' },
-                      { label: 'User', value: 'USER' },
-                    ]}
-                    searchable={false}
-                    block
+                    name="email"
+                    type="email"
+                    disabled={updateProfileMutation.isPending}
                     errorPlacement="bottomEnd"
                   />
                 </Form.Group>
               </Form.Stack>
 
+              {/* Phone */}
+
               <Form.Stack fluid>
-                <Form.Group controlId="newPassword">
-                  <Form.Label>Password</Form.Label>
+                <Form.Group controlId="phone">
+                  <Form.Label>Phone</Form.Label>
+
                   <Form.Control
-                    name="password"
-                    type="password"
-                    accepter={PasswordInput}
+                    name="phone"
+                    type="tel"
+                    disabled={updateProfileMutation.isPending}
                     errorPlacement="bottomEnd"
                   />
                 </Form.Group>
               </Form.Stack>
+
+              {/* =================================
+                  Password Optional
+              ================================= */}
 
               <Form.Stack fluid className="mb-2">
-                <Form.Group controlId="newConfirmPassword">
-                  <Form.Label>Confirm Password</Form.Label>
+                <Form.Group controlId="password">
+                  <Form.Label>Password</Form.Label>
+
                   <Form.Control
-                    name="confirmPassword"
-                    type="password"
+                    name="password"
                     accepter={PasswordInput}
+                    autoComplete="new-password"
+                    disabled={updateProfileMutation.isPending}
                     errorPlacement="bottomEnd"
+                    placeholder="(optional)"
                   />
                 </Form.Group>
               </Form.Stack>
@@ -956,153 +1109,325 @@ const Page = () => {
         <Modal.Footer>
           <Button
             startIcon={<Icon as={IoMdClose} />}
-            onClick={() => setCreateUserOpen(false)}
             appearance="default"
+            disabled={updateProfileMutation.isPending}
+            onClick={handleEditProfileClose}
+          >
+            Cancel
+          </Button>
+
+          <Button
+            startIcon={<Icon as={IoMdSave} />}
+            appearance="primary"
+            loading={updateProfileMutation.isPending}
+            disabled={updateProfileMutation.isPending}
+            onClick={handleProfileSubmit}
+          >
+            Save Changes
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* =====================================
+          Create Agent Modal
+      ===================================== */}
+
+      <Modal open={createAgentOpen} onClose={handleCreateAgentClose} size="sm" backdrop="static">
+        <Modal.Header closeButton={false}>
+          <Modal.Title>Create Agent Account</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          <Form
+            ref={createAgentFormRef}
+            model={createAgentModel}
+            formValue={newAgent}
+            onChange={(value) => setNewAgent(value as CreateAgentFormValue)}
+          >
+            <div className="grid grid-cols-1 gap-x-3 gap-y-4">
+              {/* Full Name */}
+
+              <Form.Stack fluid>
+                <Form.Group controlId="fullName">
+                  <Form.Label>Full Name</Form.Label>
+
+                  <Form.Control
+                    name="fullName"
+                    disabled={createUserMutation.isPending}
+                    errorPlacement="bottomEnd"
+                  />
+                </Form.Group>
+              </Form.Stack>
+
+              {/* Email */}
+
+              <Form.Stack fluid>
+                <Form.Group controlId="email">
+                  <Form.Label>Email</Form.Label>
+
+                  <Form.Control
+                    name="email"
+                    type="email"
+                    autoComplete="off"
+                    disabled={createUserMutation.isPending}
+                    errorPlacement="bottomEnd"
+                  />
+                </Form.Group>
+              </Form.Stack>
+
+              {/* Mobile */}
+
+              <Form.Stack fluid>
+                <Form.Group controlId="phone">
+                  <Form.Label>Mobile</Form.Label>
+
+                  <Form.Control
+                    name="phone"
+                    type="tel"
+                    disabled={createUserMutation.isPending}
+                    errorPlacement="bottomEnd"
+                  />
+                </Form.Group>
+              </Form.Stack>
+
+              {/* Password */}
+
+              <Form.Stack fluid className="mb-2">
+                <Form.Group controlId="password">
+                  <Form.Label>Password</Form.Label>
+
+                  <Form.Control
+                    name="password"
+                    accepter={PasswordInput}
+                    autoComplete="new-password"
+                    placeholder="Minimum 6 characters"
+                    disabled={createUserMutation.isPending}
+                    errorPlacement="bottomEnd"
+                  />
+                </Form.Group>
+              </Form.Stack>
+
+              {/* Role Info */}
+
+              <div className="rounded-md border border-dashed p-3">
+                <div className="text-xs text-[var(--rs-text-secondary)]">Account Role</div>
+
+                <div className="mt-2">
+                  <Tag color="green">AGENT</Tag>
+                </div>
+              </div>
+            </div>
+          </Form>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button
+            startIcon={<Icon as={IoMdClose} />}
+            appearance="default"
+            disabled={createUserMutation.isPending}
+            onClick={handleCreateAgentClose}
           >
             Cancel
           </Button>
 
           <Button
             startIcon={<Icon as={IoMdAdd} />}
-            onClick={handleCreateUser}
             appearance="primary"
-            // loading={createUserMutation.isPending}
+            loading={createUserMutation.isPending}
+            disabled={createUserMutation.isPending}
+            onClick={handleCreateAgent}
           >
-            Create
+            Create Agent
           </Button>
         </Modal.Footer>
       </Modal>
 
-      <Modal open={editUserOpen} onClose={() => setEditUserOpen(false)} size="xs" backdrop="static">
+      {/* =====================================
+          Edit Agent Modal
+      ===================================== */}
+
+      <Modal open={editAgentOpen} onClose={handleEditAgentClose} size="sm" backdrop="static">
         <Modal.Header closeButton={false}>
-          <Modal.Title>Edit User</Modal.Title>
+          <Modal.Title>Edit Agent</Modal.Title>
         </Modal.Header>
 
         <Modal.Body>
-          <Form
-            ref={editUserFormRef}
-            model={editUserModel}
-            formValue={editingUser || { role: 'USER' }}
-            onChange={(val) =>
-              setEditingUser((prev) => {
-                if (!prev) return null
+          {editingAgent && (
+            <Form
+              ref={editAgentFormRef}
+              model={editAgentModel}
+              formValue={editingAgent}
+              onChange={(value) => setEditingAgent(value as EditAgentFormValue)}
+            >
+              <div className="grid grid-cols-1 gap-x-3 gap-y-4">
+                {/* Full Name */}
 
-                return {
-                  ...prev,
-                  role: (val as { role: UserRole }).role,
-                }
-              })
-            }
-          >
-            <div className="grid grid-cols-1 gap-x-3 gap-y-4">
-              <Form.Stack fluid>
-                <Form.Group>
-                  <Form.Label>Name</Form.Label>
-                  <Form.Control name="fullName" readOnly />
-                </Form.Group>
-              </Form.Stack>
+                <Form.Stack fluid>
+                  <Form.Group controlId="fullName">
+                    <Form.Label>Full Name</Form.Label>
 
-              <Form.Stack fluid>
-                <Form.Group>
-                  <Form.Label>Email</Form.Label>
-                  <Form.Control name="email" readOnly />
-                </Form.Group>
-              </Form.Stack>
+                    <Form.Control
+                      name="fullName"
+                      disabled={updateUserMutation.isPending}
+                      errorPlacement="bottomEnd"
+                    />
+                  </Form.Group>
+                </Form.Stack>
 
-              <Form.Stack fluid>
-                <Form.Group>
-                  <Form.Label>Role</Form.Label>
-                  <Form.Control
-                    cleanable={false}
-                    name="role"
-                    accepter={SelectPicker}
-                    data={[
-                      { label: 'Admin', value: 'ADMIN' },
-                      { label: 'User', value: 'USER' },
-                    ]}
-                    searchable={false}
-                    block
-                  />
-                </Form.Group>
-              </Form.Stack>
-            </div>
-          </Form>
+                {/* Email */}
+
+                <Form.Stack fluid>
+                  <Form.Group controlId="email">
+                    <Form.Label>Email</Form.Label>
+
+                    <Form.Control
+                      name="email"
+                      type="email"
+                      disabled={updateUserMutation.isPending}
+                      errorPlacement="bottomEnd"
+                    />
+                  </Form.Group>
+                </Form.Stack>
+
+                {/* Mobile */}
+
+                <Form.Stack fluid className="mb-2">
+                  <Form.Group controlId="phone">
+                    <Form.Label>Mobile</Form.Label>
+
+                    <Form.Control
+                      name="phone"
+                      type="tel"
+                      disabled={updateUserMutation.isPending}
+                      errorPlacement="bottomEnd"
+                    />
+                  </Form.Group>
+                </Form.Stack>
+
+                {/* Role */}
+
+                <div className="rounded-md border border-dashed p-3">
+                  <div className="text-xs text-[var(--rs-text-secondary)]">Account Role</div>
+
+                  <div className="mt-2">
+                    <Tag color="green">AGENT</Tag>
+                  </div>
+                </div>
+              </div>
+            </Form>
+          )}
         </Modal.Body>
 
         <Modal.Footer>
           <Button
             startIcon={<Icon as={IoMdClose} />}
-            onClick={() => setEditUserOpen(false)}
             appearance="default"
+            disabled={updateUserMutation.isPending}
+            onClick={handleEditAgentClose}
           >
             Cancel
           </Button>
 
           <Button
             startIcon={<Icon as={IoMdSave} />}
-            onClick={handleUpdateUser}
             appearance="primary"
-            // loading={updateRoleMutation.isPending}
+            loading={updateUserMutation.isPending}
+            disabled={updateUserMutation.isPending}
+            onClick={handleUpdateAgent}
           >
-            Save
+            Save Changes
           </Button>
         </Modal.Footer>
       </Modal>
 
+      {/* =====================================
+          Reset Agent Password Modal
+      ===================================== */}
+
       <Modal
         open={resetPasswordOpen}
-        onClose={() => setResetPasswordOpen(false)}
+        onClose={handleResetPasswordClose}
         size="xs"
         backdrop="static"
       >
         <Modal.Header closeButton={false}>
-          <Modal.Title>Reset Password</Modal.Title>
+          <Modal.Title>Reset Agent Password</Modal.Title>
         </Modal.Header>
 
         <Modal.Body>
-          <Form fluid>
-            <Form.Group>
-              <Form.Label>New Password</Form.Label>
-              <Form.Control
-                name="newPassword"
-                type="password"
-                accepter={PasswordInput}
-                value={resetPassword.newPassword}
-                onChange={(val) =>
-                  setResetPassword((prev) => ({ ...prev, newPassword: val as string }))
-                }
-              />
-            </Form.Group>
+          {selectedAgent && (
+            <>
+              {/* Agent Information */}
 
-            <Form.Group>
-              <Form.Label>Confirm Password</Form.Label>
-              <Form.Control
-                name="confirmPassword"
-                type="password"
-                accepter={PasswordInput}
-                value={resetPassword.confirmPassword}
-                onChange={(val) =>
-                  setResetPassword((prev) => ({ ...prev, confirmPassword: val as string }))
-                }
-              />
-            </Form.Group>
-          </Form>
+              <div className="mb-5 rounded-md border border-dashed p-3">
+                <div className="font-medium">{selectedAgent.fullName}</div>
+
+                <div className="mt-1 text-sm text-[var(--rs-text-secondary)]">
+                  {selectedAgent.email}
+                </div>
+              </div>
+
+              <Form fluid>
+                {/* New Password */}
+
+                <Form.Group>
+                  <Form.Label>New Password</Form.Label>
+
+                  <PasswordInput
+                    value={resetPassword.newPassword}
+                    autoComplete="new-password"
+                    placeholder="Minimum 6 characters"
+                    disabled={updateUserMutation.isPending}
+                    onChange={(value) =>
+                      setResetPassword((prev) => ({
+                        ...prev,
+
+                        newPassword: value,
+                      }))
+                    }
+                  />
+                </Form.Group>
+
+                {/* Confirm Password */}
+
+                <Form.Group>
+                  <Form.Label>Confirm Password</Form.Label>
+
+                  <PasswordInput
+                    value={resetPassword.confirmPassword}
+                    autoComplete="new-password"
+                    placeholder="Enter password again"
+                    disabled={updateUserMutation.isPending}
+                    onChange={(value) =>
+                      setResetPassword((prev) => ({
+                        ...prev,
+
+                        confirmPassword: value,
+                      }))
+                    }
+                  />
+                </Form.Group>
+              </Form>
+            </>
+          )}
         </Modal.Body>
 
         <Modal.Footer>
           <Button
             startIcon={<Icon as={IoMdClose} />}
-            onClick={() => setResetPasswordOpen(false)}
             appearance="default"
+            disabled={updateUserMutation.isPending}
+            onClick={handleResetPasswordClose}
           >
             Cancel
           </Button>
 
           <Button
             startIcon={<Icon as={IoMdSave} />}
-            onClick={handleResetPassword}
             appearance="primary"
-            // loading={resetPasswordMutation.isPending}
+            loading={updateUserMutation.isPending}
+            disabled={updateUserMutation.isPending}
+            onClick={handleResetPassword}
           >
             Reset Password
           </Button>

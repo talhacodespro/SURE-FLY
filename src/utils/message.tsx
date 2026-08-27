@@ -1,3 +1,7 @@
+/**
+ * Toast/message helper.
+ * Returns a preconfigured RSuite Message component.
+ */
 import { Message } from 'rsuite'
 
 type MessageProps = {

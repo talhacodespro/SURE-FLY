@@ -1,94 +1,115 @@
-import api from '@/lib/api/axios'
 import type { ApiResponse } from '@/types/api'
-import type { AxiosResponse } from 'axios'
+import api from './axios'
+
+/* =========================================
+   Types
+========================================= */
+
+export type UserRole = 'AGENT' | 'ADMIN'
 
 export type User = {
   id: number
-  name: string
-  email: string
-  mobile?: string
-  role?: string
-  status?: string
-  dob?: string | Date | null
-  address?: string
-  createdAt?: string
-  updatedAt?: string
-}
 
-export type CreateUserPayload = {
   fullName: string
   email: string
-  phone?: string
-  password?: string
-  avatar?: string
-  role?: string
-  status?: string
-  dob?: string | Date | null
-  address?: string
-}
 
-export type UpdateUserPayload = Partial<CreateUserPayload>
-
-export type LoginPayload = {
-  email: string
-  password: string
-}
-
-export type LoginData = {
-  token: string
-}
-
-export type AuthResponse = ApiResponse<LoginData>
-
-export type MeData = {
-  id: number
-  fullName: string
-  email: string
   phone: string | null
-  avatar: string | null
-  isPasswordSet: boolean
-  dob: string | null
-  address: string | null
+
+  role: UserRole
+
   isActive: boolean
-  role: string
+
   createdAt: string
   updatedAt: string
 }
 
-export const getUsers = async (): Promise<User[]> => {
-  const res: AxiosResponse<User[]> = await api.get('/users')
-  return res.data
+/* =========================================
+   Create User
+========================================= */
+
+export type CreateUserPayload = {
+  fullName: string
+  email: string
+  phone: string
+  password: string
+
+  role: UserRole
 }
 
-export const getUser = async (id: number | string): Promise<User> => {
-  const res: AxiosResponse<User> = await api.get(`/users/${id}`)
-  return res.data
+/* =========================================
+   Update Profile
+========================================= */
+
+export type UpdateProfilePayload = {
+  fullName?: string
+  email?: string
+  phone?: string
+
+  password?: string
 }
 
-export const createUser = async (payload: CreateUserPayload): Promise<User> => {
-  const res: AxiosResponse<User> = await api.post('/users', payload)
-  return res.data
+/* =========================================
+   Update User
+========================================= */
+
+export type UpdateUserPayload = {
+  fullName?: string
+  email?: string
+  phone?: string
+
+  password?: string
+
+  role?: UserRole
+
+  isActive?: boolean
 }
 
-export const updateUser = async (
-  id: number | string,
-  payload: UpdateUserPayload,
-): Promise<User> => {
-  const res: AxiosResponse<User> = await api.patch(`/users/${id}`, payload)
-  return res.data
+/* =========================================
+   Create User
+========================================= */
+
+export const createUser = async (payload: CreateUserPayload) => {
+  const { data } = await api.post<ApiResponse<User>>('/users', payload)
+
+  return data
 }
 
-export const deleteUser = async (id: number | string): Promise<{ success: boolean }> => {
-  const res: AxiosResponse<{ success: boolean }> = await api.delete(`/users/${id}`)
-  return res.data
+/* =========================================
+   Get Users
+========================================= */
+
+export const getUsers = async () => {
+  const { data } = await api.get<ApiResponse<User[]>>('/users')
+
+  return data
 }
 
-export const login = async (payload: LoginPayload): Promise<AuthResponse> => {
-  const res: AxiosResponse<AuthResponse> = await api.post('/auth/login', payload)
-  return res.data
+/* =========================================
+   Get User
+========================================= */
+
+export const getUser = async (id: number) => {
+  const { data } = await api.get<ApiResponse<User>>(`/users/${id}`)
+
+  return data
 }
 
-export const me = async (): Promise<ApiResponse<MeData>> => {
-  const res: AxiosResponse<ApiResponse<MeData>> = await api.get('/auth/me')
-  return res.data
+/* =========================================
+   Update Profile
+========================================= */
+
+export const updateProfile = async (payload: UpdateProfilePayload) => {
+  const { data } = await api.patch<ApiResponse<User>>('/users/me', payload)
+
+  return data
+}
+
+/* =========================================
+   Update User
+========================================= */
+
+export const updateUser = async (id: number, payload: UpdateUserPayload) => {
+  const { data } = await api.patch<ApiResponse<User>>(`/users/${id}`, payload)
+
+  return data
 }

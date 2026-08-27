@@ -1,34 +1,24 @@
+/**
+ * App route definitions.
+ * Uses react-router's data router (createBrowserRouter).
+ */
 import DashboardLayout from '@/layouts/DashboardLayout'
 import {
-  Analytic,
   Error,
-  AddCompany,
-  ListCompany,
-  EditCompany,
-  AddSales,
-  ListSales,
-  EditSales,
+  AddAgent,
+  ListAgent,
+  EditAgent,
   AddPassport,
   ListPassport,
   EditPassport,
-  CompanyPayment,
-  PaymentMethod,
   Profile,
   Login,
-  FundTransfer,
-  AddExpense,
-  ListExpense,
-  ExpenseCategory,
-  ListTransactions,
-  ReceivePayment,
-  TicketStatus,
-  VisaStatus,
-  // VisaStatus,
+  ListAgentPassport,
+  Dashboard,
 } from '@/pages'
 import { createBrowserRouter } from 'react-router'
 import RequireAuth from '@/guards/RequireAuth'
 
-// router defined here and mange the app ⤵
 const router = createBrowserRouter([
   {
     path: '/',
@@ -41,33 +31,21 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Analytic />,
+        element: <Dashboard />,
+      },
+      {
+        path: '/add-agent',
+        element: <AddAgent />,
+      },
+      {
+        path: '/list-agent',
+        element: <ListAgent />,
+      },
+      {
+        path: '/edit-agent/:id',
+        element: <EditAgent />,
       },
 
-      {
-        path: '/add-company',
-        element: <AddCompany />,
-      },
-      {
-        path: '/list-company',
-        element: <ListCompany />,
-      },
-      {
-        path: '/edit-company/:id',
-        element: <EditCompany />,
-      },
-      {
-        path: '/add-sales',
-        element: <AddSales />,
-      },
-      {
-        path: '/list-sales',
-        element: <ListSales />,
-      },
-      {
-        path: '/edit-sales/:id',
-        element: <EditSales />,
-      },
       {
         path: '/add-passport',
         element: <AddPassport />,
@@ -77,48 +55,12 @@ const router = createBrowserRouter([
         element: <ListPassport />,
       },
       {
+        path: '/list-agent-passport',
+        element: <ListAgentPassport />,
+      },
+      {
         path: '/edit-passport/:id',
         element: <EditPassport />,
-      },
-      {
-        path: '/receive-payment',
-        element: <ReceivePayment />,
-      },
-      {
-        path: '/company-payment',
-        element: <CompanyPayment />,
-      },
-      {
-        path: '/payment-method',
-        element: <PaymentMethod />,
-      },
-      {
-        path: '/fund-transfer',
-        element: <FundTransfer />,
-      },
-      {
-        path: '/add-expense',
-        element: <AddExpense />,
-      },
-      {
-        path: '/list-expense',
-        element: <ListExpense />,
-      },
-      {
-        path: '/all-transactions',
-        element: <ListTransactions />,
-      },
-      {
-        path: '/expense-category',
-        element: <ExpenseCategory />,
-      },
-      {
-        path: '/ticket-status',
-        element: <TicketStatus />,
-      },
-      {
-        path: '/visa-status',
-        element: <VisaStatus />,
       },
     ],
   },

@@ -2,33 +2,44 @@ import { create } from 'zustand'
 
 type AuthState = {
   isAuth: boolean
-  login: (token: string, rememberMe?: boolean) => void
+
+  token: string | null
+
+  login: (token: string) => void
+
   logout: () => void
 }
 
-const getStoredToken = () => {
-  return localStorage.getItem('token') || sessionStorage.getItem('token')
-}
+/* =========================================
+   Initial Token
+========================================= */
+
+const token = localStorage.getItem('token')
+
+/* =========================================
+   Auth Store
+========================================= */
 
 export const useAuth = create<AuthState>((set) => ({
-  isAuth: Boolean(getStoredToken()),
+  token,
 
-  login: (token, rememberMe = false) => {
-    localStorage.removeItem('token')
-    sessionStorage.removeItem('token')
+  isAuth: Boolean(token),
 
-    if (rememberMe) {
-      localStorage.setItem('token', token)
-    } else {
-      sessionStorage.setItem('token', token)
-    }
+  login: (token) => {
+    localStorage.setItem('token', token)
 
-    set({ isAuth: true })
+    set({
+      token,
+      isAuth: true,
+    })
   },
 
   logout: () => {
     localStorage.removeItem('token')
-    sessionStorage.removeItem('token')
-    set({ isAuth: false })
+
+    set({
+      token: null,
+      isAuth: false,
+    })
   },
 }))

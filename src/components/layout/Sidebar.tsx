@@ -1,16 +1,16 @@
+/**
+ * App sidebar navigation.
+ * Builds grouped nav items and handles mobile open/close state.
+ */
 import { Nav, Sidenav } from 'rsuite'
 import { Icon } from '@rsuite/icons'
-import { RiPassPendingFill } from 'react-icons/ri'
 import { Link, useLocation } from 'react-router'
 import { cn } from '@/lib/cn'
 import { useSidebar } from '@/store/useSidebar'
 import { BiSolidDashboard } from 'react-icons/bi'
-import { FaBuildingColumns, FaMoneyBillTransfer, FaPassport } from 'react-icons/fa6'
-import { IoPricetagsSharp } from 'react-icons/io5'
-import { MdAccountBalanceWallet } from 'react-icons/md'
-import { TbCashBanknoteFilled } from 'react-icons/tb'
-
-import type { IconType } from 'react-icons'
+import { FaPassport } from 'react-icons/fa6'
+import { BsPersonLinesFill } from 'react-icons/bs'
+import type { IconType } from 'react-icons/lib'
 
 type SidebarChild = {
   label: string
@@ -42,48 +42,19 @@ const sidebarItems: SidebarItem[] = [
     icon: BiSolidDashboard,
     path: '/',
   },
+
   {
     type: 'menu',
-    label: 'Service Status',
-    icon: RiPassPendingFill,
+    label: 'Agent',
+    icon: BsPersonLinesFill,
     children: [
       {
-        label: 'Ticket Status',
-        path: '/ticket-status',
+        label: 'Add Agent',
+        path: '/add-agent',
       },
       {
-        label: 'Visa Status',
-        path: '/visa-status',
-      },
-    ],
-  },
-  {
-    type: 'menu',
-    label: 'Company',
-    icon: FaBuildingColumns,
-    children: [
-      {
-        label: 'Add Company',
-        path: '/add-company',
-      },
-      {
-        label: 'List Company',
-        path: '/list-company',
-      },
-    ],
-  },
-  {
-    type: 'menu',
-    label: 'Sales',
-    icon: IoPricetagsSharp,
-    children: [
-      {
-        label: 'Add Sales',
-        path: '/add-sales',
-      },
-      {
-        label: 'List Sales',
-        path: '/list-sales',
+        label: 'List Agent',
+        path: '/list-agent',
       },
     ],
   },
@@ -100,58 +71,9 @@ const sidebarItems: SidebarItem[] = [
         label: 'List Passport',
         path: '/list-passport',
       },
-    ],
-  },
-  {
-    type: 'menu',
-    label: 'Account',
-    icon: MdAccountBalanceWallet,
-    children: [
       {
-        label: 'Receive Payment',
-        path: '/receive-payment',
-      },
-      {
-        label: 'Company Payment',
-        path: '/company-payment',
-      },
-      {
-        label: 'Payment Method',
-        path: '/payment-method',
-      },
-    ],
-  },
-  {
-    type: 'menu',
-    label: 'Cash Manager',
-    icon: TbCashBanknoteFilled,
-    children: [
-      {
-        label: 'Fund Transfer',
-        path: '/fund-transfer',
-      },
-      {
-        label: 'All Transactions',
-        path: '/all-transactions',
-      },
-    ],
-  },
-  {
-    type: 'menu',
-    label: 'Expense',
-    icon: FaMoneyBillTransfer,
-    children: [
-      {
-        label: 'Add Expense',
-        path: '/add-expense',
-      },
-      {
-        label: 'List Expense',
-        path: '/list-expense',
-      },
-      {
-        label: 'Expense Category',
-        path: '/expense-category',
+        label: 'List Agent Passport',
+        path: '/list-agent-passport',
       },
     ],
   },

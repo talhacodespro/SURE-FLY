@@ -1,5 +1,7 @@
+/* Global app styles.
+ * Defines theme variables and a few RSuite/Tailwind overrides.
+ */
 @import 'tailwindcss';
-@custom-variant dark (&:where(.rs-theme-dark, .rs-theme-dark *));
 
 :root {
   --background: #f7f7fa;

@@ -1,3 +1,7 @@
+/**
+ * Shared Axios API client.
+ * Adds auth token headers and shows toast messages for API errors.
+ */
 import { useAuth } from '@/store/useAuth'
 import message from '@/utils/message'
 import axios, { AxiosHeaders } from 'axios'
